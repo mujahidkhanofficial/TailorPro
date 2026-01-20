@@ -1,0 +1,114 @@
+{
+    "app": {
+        "name": "ٹیلر پرو",
+        "tagline": "آپ کی ڈیجیٹل درزی ڈائری"
+    },
+    "nav": {
+        "dashboard": "ڈیش بورڈ",
+        "customers": "گاہک",
+        "orders": "آرڈرز",
+        "backup": "بیک اپ",
+        "settings": "ترتیبات"
+    },
+    "dashboard": {
+        "title": "ڈیش بورڈ",
+        "totalCustomers": "کل گاہک",
+        "pendingOrders": "زیر التواء آرڈرز",
+        "dueToday": "آج واجب الادا",
+        "overdue": "میعاد ختم",
+        "recentOrders": "حالیہ آرڈرز",
+        "noOrdersDueToday": "آج کوئی آرڈر واجب الادا نہیں"
+    },
+    "customers": {
+        "title": "گاہک",
+        "addNew": "گاہک شامل کریں",
+        "search": "نام یا فون سے تلاش کریں...",
+        "name": "پورا نام",
+        "phone": "فون نمبر",
+        "address": "پتہ",
+        "photo": "تصویر",
+        "noCustomers": "ابھی تک کوئی گاہک نہیں",
+        "deleteConfirm": "کیا آپ واقعی اس گاہک کو حذف کرنا چاہتے ہیں؟",
+        "viewHistory": "آرڈر کی تاریخ دیکھیں"
+    },
+    "orders": {
+        "title": "آرڈرز",
+        "addNew": "نیا آرڈر",
+        "selectCustomer": "گاہک منتخب کریں",
+        "garmentType": "کپڑے کی قسم",
+        "dueDate": "تاریخ ادائیگی",
+        "advancePayment": "پیشگی ادائیگی",
+        "deliveryNotes": "ترسیل نوٹس",
+        "status": "حیثیت",
+        "noOrders": "ابھی تک کوئی آرڈر نہیں",
+        "statusNew": "نیا",
+        "statusInProgress": "جاری ہے",
+        "statusReady": "تیار",
+        "statusDelivered": "پہنچا دیا گیا",
+        "statusCompleted": "مکمل"
+    },
+    "garments": {
+        "sherwani": "شیروانی",
+        "kurta_pajama": "کرتا پاجامہ",
+        "western_suit": "مغربی سوٹ",
+        "pathani_suit": "پٹھانی سوٹ",
+        "casual": "کیژول شرٹ/پینٹ"
+    },
+    "measurements": {
+        "title": "ناپ",
+        "chest": "سینہ",
+        "waist": "کمر",
+        "shoulder": "کندھا",
+        "armhole": "بغل",
+        "length": "لمبائی",
+        "sleeve": "آستین",
+        "collar": "کالر",
+        "pajama_waist": "پاجامہ کمر",
+        "pajama_length": "پاجامہ لمبائی",
+        "jacket_length": "جیکٹ لمبائی",
+        "trouser_waist": "پتلون کمر",
+        "trouser_length": "پتلون لمبائی",
+        "shalwar_waist": "شلوار کمر",
+        "shalwar_length": "شلوار لمبائی"
+    },
+    "backup": {
+        "title": "بیک اپ اور بحالی",
+        "export": "برآمد",
+        "import": "درآمد",
+        "exportFull": "مکمل بیک اپ برآمد کریں",
+        "exportCustomers": "گاہکوں کو برآمد کریں (CSV)",
+        "importBackup": "بیک اپ درآمد کریں",
+        "exportSuccess": "بیک اپ کامیابی سے برآمد ہوا!",
+        "importSuccess": "بیک اپ کامیابی سے بحال ہوا!",
+        "importError": "درآمد ناکام۔ براہ کرم فائل چیک کریں۔",
+        "exportError": "برآمد ناکام۔ براہ کرم دوبارہ کوشش کریں۔",
+        "warning": "درآمد کرنے سے موجودہ ڈیٹا کے ساتھ ضم ہو جائے گا"
+    },
+    "settings": {
+        "title": "ترتیبات",
+        "language": "زبان",
+        "about": "ہمارے بارے میں",
+        "version": "ورژن"
+    },
+    "common": {
+        "save": "محفوظ کریں",
+        "cancel": "منسوخ",
+        "delete": "حذف کریں",
+        "edit": "ترمیم",
+        "add": "شامل کریں",
+        "search": "تلاش کریں",
+        "loading": "لوڈ ہو رہا ہے...",
+        "noResults": "کوئی نتائج نہیں ملے",
+        "confirm": "تصدیق کریں",
+        "yes": "ہاں",
+        "no": "نہیں",
+        "all": "سب",
+        "change": "تبدیل کریں",
+        "confirmDelete": "کیا آپ واقعی اسے حذف کرنا چاہتے ہیں؟",
+        "deleteSuccess": "کامیابی سے حذف ہو گیا"
+    },
+    "validation": {
+        "required": "یہ فیلڈ ضروری ہے",
+        "invalidPhone": "براہ کرم درست پاکستانی فون نمبر درج کریں"
+    }
+}

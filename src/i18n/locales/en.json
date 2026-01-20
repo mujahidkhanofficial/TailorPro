@@ -1,0 +1,114 @@
+{
+    "app": {
+        "name": "Tailor Pro",
+        "tagline": "Your Digital Darzi Diary"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "customers": "Customers",
+        "orders": "Orders",
+        "backup": "Backup",
+        "settings": "Settings"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "totalCustomers": "Total Customers",
+        "pendingOrders": "Pending Orders",
+        "dueToday": "Due Today",
+        "overdue": "Overdue",
+        "recentOrders": "Recent Orders",
+        "noOrdersDueToday": "No orders due today"
+    },
+    "customers": {
+        "title": "Customers",
+        "addNew": "Add Customer",
+        "search": "Search by name or phone...",
+        "name": "Full Name",
+        "phone": "Phone Number",
+        "address": "Address",
+        "photo": "Photo",
+        "noCustomers": "No customers yet",
+        "deleteConfirm": "Are you sure you want to delete this customer?",
+        "viewHistory": "View Order History"
+    },
+    "orders": {
+        "title": "Orders",
+        "addNew": "New Order",
+        "selectCustomer": "Select Customer",
+        "garmentType": "Garment Type",
+        "dueDate": "Due Date",
+        "advancePayment": "Advance Payment",
+        "deliveryNotes": "Delivery Notes",
+        "status": "Status",
+        "noOrders": "No orders yet",
+        "statusNew": "New",
+        "statusInProgress": "In Progress",
+        "statusReady": "Ready",
+        "statusDelivered": "Delivered",
+        "statusCompleted": "Completed"
+    },
+    "garments": {
+        "sherwani": "Sherwani",
+        "kurta_pajama": "Kurta Pajama",
+        "western_suit": "Western Suit",
+        "pathani_suit": "Pathani Suit",
+        "casual": "Casual Shirt/Pant"
+    },
+    "measurements": {
+        "title": "Measurements",
+        "chest": "Chest",
+        "waist": "Waist",
+        "shoulder": "Shoulder",
+        "armhole": "Armhole",
+        "length": "Length",
+        "sleeve": "Sleeve",
+        "collar": "Collar",
+        "pajama_waist": "Pajama Waist",
+        "pajama_length": "Pajama Length",
+        "jacket_length": "Jacket Length",
+        "trouser_waist": "Trouser Waist",
+        "trouser_length": "Trouser Length",
+        "shalwar_waist": "Shalwar Waist",
+        "shalwar_length": "Shalwar Length"
+    },
+    "backup": {
+        "title": "Backup & Restore",
+        "export": "Export",
+        "import": "Import",
+        "exportFull": "Export Full Backup",
+        "exportCustomers": "Export Customers (CSV)",
+        "importBackup": "Import Backup",
+        "exportSuccess": "Backup exported successfully!",
+        "importSuccess": "Backup restored successfully!",
+        "importError": "Import failed. Please check the file.",
+        "exportError": "Export failed. Please try again.",
+        "warning": "Importing will merge with existing data"
+    },
+    "settings": {
+        "title": "Settings",
+        "language": "Language",
+        "about": "About",
+        "version": "Version"
+    },
+    "common": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "add": "Add",
+        "search": "Search",
+        "loading": "Loading...",
+        "noResults": "No results found",
+        "confirm": "Confirm",
+        "yes": "Yes",
+        "no": "No",
+        "all": "All",
+        "change": "Change",
+        "confirmDelete": "Are you sure you want to delete this?",
+        "deleteSuccess": "Deleted successfully"
+    },
+    "validation": {
+        "required": "This field is required",
+        "invalidPhone": "Please enter a valid Pakistani phone number"
+    }
+}

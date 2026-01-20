@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'NotoNastaliqUrdu';
+  src: url('/fonts/NotoNastaliqUrdu-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NotoNastaliqUrdu';
+  src: url('/fonts/NotoNastaliqUrdu-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NotoNastaliqUrdu';
+  src: url('/fonts/NotoNastaliqUrdu-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+/* Global Styles */
+:root {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-urdu: 'NotoNastaliqUrdu', serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Urdu Mode - Force font execution */
+html[lang="ur"] body,
+html[lang="ur"] button,
+html[lang="ur"] input,
+html[lang="ur"] select,
+html[lang="ur"] textarea,
+html[lang="ur"] [class*="text-"] {
+  font-family: 'NotoNastaliqUrdu', serif !important;
+  line-height: 2 !important;
+  /* Nastaliq requires more height */
+}
+
+/* Custom Scrollbar for Windows */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Focus Styles for Accessibility */
+:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Button Base */
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 active:scale-95;
+  }
+
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 shadow-md shadow-primary-500/20 hover:shadow-primary-500/30 focus:ring-primary-500;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 focus:ring-gray-200;
+  }
+
+  .btn-danger {
+    @apply bg-danger-500 text-white hover:bg-danger-600 shadow-md shadow-danger-500/20 focus:ring-danger-500;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-card border border-gray-200/60 p-6 hover:shadow-card-hover transition-shadow duration-300;
+  }
+
+  .input {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 bg-gray-50/30 focus:bg-white;
+  }
+}
