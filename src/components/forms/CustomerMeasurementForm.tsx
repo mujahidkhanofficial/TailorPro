@@ -143,7 +143,7 @@ export default function CustomerMeasurementForm({
                     <button
                         type="button"
                         onClick={handleReset}
-                        className="btn btn-secondary text-sm flex items-center gap-1"
+                        className="btn btn-danger text-sm flex items-center gap-1"
                     >
                         <RotateCcw className="w-4 h-4" />
                         {isUrdu ? 'ری سیٹ' : 'Reset'}
@@ -151,7 +151,7 @@ export default function CustomerMeasurementForm({
                     <button
                         type="button"
                         onClick={handlePrint}
-                        className="btn btn-secondary text-sm flex items-center gap-1"
+                        className="btn btn-primary text-sm flex items-center gap-2"
                     >
                         <Printer className="w-4 h-4" />
                         {isUrdu ? 'پرنٹ' : 'Print'}

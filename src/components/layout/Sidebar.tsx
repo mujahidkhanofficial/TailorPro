@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useUIStore } from '@/stores/uiStore';
-import { LayoutDashboard, Users, ShoppingBag, Cloud, Settings, Scissors } from 'lucide-react';
+import { LayoutDashboard, Users, ShoppingBag, Cloud, Settings, Scissors, HardHat } from 'lucide-react';
 import { ReactNode } from 'react';
 
 interface NavItem {
@@ -14,9 +14,11 @@ const navItems: NavItem[] = [
     { path: '/', icon: <LayoutDashboard size={20} />, labelKey: 'nav.dashboard' },
     { path: '/customers', icon: <Users size={20} />, labelKey: 'nav.customers' },
     { path: '/orders', icon: <ShoppingBag size={20} />, labelKey: 'nav.orders' },
+    { path: '/workers', icon: <HardHat size={20} />, labelKey: 'nav.workers' },
     { path: '/backup', icon: <Cloud size={20} />, labelKey: 'nav.backup' },
     { path: '/settings', icon: <Settings size={20} />, labelKey: 'nav.settings' },
 ];
+
 
 interface SidebarProps {
     isOpen: boolean;

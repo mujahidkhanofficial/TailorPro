@@ -1,20 +1,26 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCustomerStore } from '@/stores/customerStore';
 import { Customer } from '@/db/database';
 import CustomerFormModal from '@/components/forms/CustomerFormModal';
-import { Plus, Search, Users, History, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Search, Users, History, Edit2, Trash2, Ruler, Phone, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import PageTransition from '@/components/ui/PageTransition';
 import Skeleton from '@/components/ui/Skeleton';
 
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
+
 export default function Customers() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const { customers, loading, searchQuery, loadCustomers, setSearchQuery, deleteCustomer } = useCustomerStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCustomer, setEditingCustomer] = useState<Customer | undefined>(undefined);
+
+    // Modal Delete State
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
     useEffect(() => {
         loadCustomers();
@@ -59,28 +65,16 @@ export default function Customers() {
         setIsModalOpen(true);
     };
 
-    const handleDelete = async (id: number) => {
-        toast((t_toast) => (
-            <div className="flex items-center gap-3">
-                <span>{t('common.confirmDelete')}</span>
-                <button
-                    onClick={async () => {
-                        toast.dismiss(t_toast.id);
-                        await deleteCustomer(id);
-                        toast.success(t('common.deleteSuccess'));
-                    }}
-                    className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600"
-                >
-                    {t('common.delete')}
-                </button>
-                <button
-                    onClick={() => toast.dismiss(t_toast.id)}
-                    className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300"
-                >
-                    {t('common.cancel')}
-                </button>
-            </div>
-        ), { duration: 10000 });
+    const handleDelete = (id: number) => {
+        setDeleteId(id);
+    };
+
+    const confirmDelete = async () => {
+        if (deleteId) {
+            await deleteCustomer(deleteId);
+            toast.success(t('common.deleteSuccess'));
+            setDeleteId(null);
+        }
     };
 
     return (
@@ -132,56 +126,78 @@ export default function Customers() {
                     </button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {customers.map((customer) => (
-                        <div key={customer.id} className="card hover:shadow-md transition-shadow group">
-                            <div className="flex items-start gap-4">
-                                {/* Avatar */}
-                                <div className="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 shrink-0 overflow-hidden border border-primary-100">
-                                    {customer.photo ? (
-                                        <img
-                                            src={customer.photo}
-                                            alt={customer.name}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <Users className="w-6 h-6 opacity-80" />
-                                    )}
-                                </div>
-
-                                {/* Info */}
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-semibold text-gray-900 truncate">{customer.name}</h3>
-                                    <p className="text-sm text-gray-600">{customer.phone}</p>
-                                    {customer.address && (
-                                        <p className="text-sm text-gray-400 truncate">{customer.address}</p>
-                                    )}
+                        <div key={customer.id} className="bg-slate-800 rounded-xl p-6 shadow-lg text-slate-200 border border-slate-700 flex flex-col justify-between h-full group">
+                            {/* Header */}
+                            <div className="flex justify-between items-center pb-4 border-b border-slate-700 mb-4">
+                                <Link to={`/customers/${customer.id}`} className="font-bold text-lg text-white hover:text-blue-300 transition-colors truncate pr-2">
+                                    {customer.name}
+                                </Link>
+                                <div className="text-xs bg-slate-700 px-2 py-1 rounded text-blue-300 shrink-0">
+                                    #{customer.id}
                                 </div>
                             </div>
 
-                            {/* Actions */}
-                            <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
-                                <Link
-                                    to={`/customers/${customer.id}`}
-                                    className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                                    title={t('customers.viewHistory')}
-                                >
-                                    <History className="w-5 h-5" />
-                                </Link>
-                                <button
-                                    onClick={() => handleEdit(customer)}
-                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                                    title={t('common.edit')}
-                                >
-                                    <Edit2 className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(customer.id!)}
-                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                    title={t('common.delete')}
-                                >
-                                    <Trash2 className="w-5 h-5" />
-                                </button>
+                            {/* Info */}
+                            <div className="space-y-3 mb-6 flex-1">
+                                <div className="flex items-center text-sm text-slate-300 gap-3">
+                                    <span className="p-1.5 bg-slate-700 rounded-full">
+                                        <Phone className="w-3 h-3" />
+                                    </span>
+                                    {customer.phone}
+                                </div>
+                                {customer.address ? (
+                                    <div className="flex items-start text-sm text-slate-300 gap-3">
+                                        <span className="p-1.5 bg-slate-700 rounded-full mt-0.5">
+                                            <MapPin className="w-3 h-3" />
+                                        </span>
+                                        <span className="line-clamp-2">{customer.address}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center text-sm text-slate-500 gap-3 italic">
+                                        <span className="p-1.5 bg-slate-700 rounded-full">
+                                            <MapPin className="w-3 h-3" />
+                                        </span>
+                                        {t('customers.address')}...
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Footer Actions */}
+                            <div className="flex justify-between items-center text-slate-400">
+                                <div className="flex gap-2">
+                                    <Link
+                                        to={`/customers/${customer.id}`}
+                                        className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-slate-700 rounded transition-colors"
+                                        title={t('measurements.title')}
+                                    >
+                                        <Ruler className="w-4 h-4" />
+                                    </Link>
+                                    <Link
+                                        to={`/customers/${customer.id}`}
+                                        className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded transition-colors"
+                                        title={t('customers.viewHistory')}
+                                    >
+                                        <History className="w-4 h-4" />
+                                    </Link>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleEdit(customer)}
+                                        className="p-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-slate-700 rounded transition-colors"
+                                        title={t('common.edit')}
+                                    >
+                                        <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(customer.id!)}
+                                        className="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-slate-700 rounded transition-colors"
+                                        title={t('common.delete')}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -193,8 +209,19 @@ export default function Customers() {
                 <CustomerFormModal
                     customer={editingCustomer}
                     onClose={() => setIsModalOpen(false)}
+                    onSaveAndMeasure={(id) => navigate(`/customers/${id}`)}
                 />
             )}
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={!!deleteId}
+                onClose={() => setDeleteId(null)}
+                onConfirm={confirmDelete}
+                title={t('common.delete')}
+                message={t('common.confirmDelete')}
+                isDestructive={true}
+            />
         </PageTransition>
     );
 }

@@ -1,30 +1,27 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCustomerStore } from '@/stores/customerStore';
 import { Customer } from '@/db/database';
-import { Camera } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 interface CustomerFormModalProps {
     customer?: Customer | null;
     onClose: () => void;
     onSuccess?: (customerId: number) => void;
+    onSaveAndMeasure?: (customerId: number) => void;
 }
 
-export default function CustomerFormModal({ customer, onClose, onSuccess }: CustomerFormModalProps) {
+export default function CustomerFormModal({ customer, onClose, onSuccess, onSaveAndMeasure }: CustomerFormModalProps) {
     const { t } = useTranslation();
     const { addCustomer, updateCustomer } = useCustomerStore();
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState({
         name: customer?.name || '',
         phone: customer?.phone || '',
         address: customer?.address || '',
-        photo: customer?.photo || '',
+        id: customer?.id?.toString() || '',
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
-
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Escape key to close modal
@@ -36,16 +33,20 @@ export default function CustomerFormModal({ customer, onClose, onSuccess }: Cust
         return () => window.removeEventListener('keydown', handleEsc);
     }, [onClose]);
 
-
     const validatePhone = (phone: string): boolean => {
-        // Pakistani phone format: 03XX-XXXXXXX or landline
-        const mobilePattern = /^03\d{2}-?\d{7}$/;
-        const landlinePattern = /^0\d{2,3}-?\d{6,7}$/;
+        // Must be digits only
+        if (!/^\d+$/.test(phone)) return false;
+
+        // Pakistani mobile: 11 digits starting with 03
+        const mobilePattern = /^03\d{9}$/;
+        // Landline: Usually 10-11 digits starting with 0
+        const landlinePattern = /^0\d{9,10}$/;
+
         return mobilePattern.test(phone) || landlinePattern.test(phone);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (e: React.FormEvent | null, shouldRedirect: boolean = false) => {
+        if (e) e.preventDefault();
 
         // Validation
         const newErrors: Record<string, string> = {};
@@ -60,6 +61,29 @@ export default function CustomerFormModal({ customer, onClose, onSuccess }: Cust
             newErrors.phone = t('validation.invalidPhone');
         }
 
+        // Validate Manual ID if provided
+        if (formData.id && !customer) {
+            const manualId = parseInt(formData.id);
+            if (isNaN(manualId) || manualId <= 0) {
+                newErrors.id = t('validation.invalidId');
+            } else {
+                // Check if ID exists
+                const existing = await useCustomerStore.getState().customers.find(c => c.id === manualId);
+                if (existing) {
+                    newErrors.id = t('validation.idExists');
+                }
+            }
+        }
+
+        // Check phone uniqueness
+        if (formData.phone.trim()) {
+            const customers = useCustomerStore.getState().customers;
+            const existing = customers.find(c => c.phone === formData.phone && c.id !== customer?.id);
+            if (existing) {
+                newErrors.phone = t('validation.phoneExists');
+            }
+        }
+
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             return;
@@ -67,39 +91,49 @@ export default function CustomerFormModal({ customer, onClose, onSuccess }: Cust
 
         try {
             setIsSubmitting(true);
+            let savedId: number;
+
             if (customer?.id) {
-                await updateCustomer(customer.id, formData);
-                if (onSuccess) onSuccess(customer.id);
+                await updateCustomer(customer.id, {
+                    name: formData.name,
+                    phone: formData.phone,
+                    address: formData.address,
+                });
+                savedId = customer.id;
             } else {
-                const newId = await addCustomer(formData);
-                if (onSuccess) onSuccess(newId);
+                // Prepare new customer data
+                const newCustomerData: any = {
+                    name: formData.name,
+                    phone: formData.phone,
+                    address: formData.address,
+                };
+
+                // Add manual ID if provided
+                if (formData.id) {
+                    newCustomerData.id = parseInt(formData.id);
+                }
+
+                savedId = await addCustomer(newCustomerData);
             }
-            onClose();
-        } catch (error) {
+
+            if (onSuccess) onSuccess(savedId);
+
+            if (shouldRedirect && onSaveAndMeasure) {
+                onSaveAndMeasure(savedId);
+            } else {
+                onClose();
+            }
+
+        } catch (error: any) {
             console.error('Error saving customer:', error);
+            if (error.name === 'ConstraintError' || error.message?.includes('Key already exists')) {
+                setErrors(prev => ({ ...prev, id: t('validation.idExists') }));
+            } else {
+                setErrors(prev => ({ ...prev, form: t('common.error') }));
+            }
         } finally {
             setIsSubmitting(false);
         }
-    };
-
-    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        // Limit to 500KB
-        if (file.size > 500000) {
-            toast.error('Photo must be less than 500KB');
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            setFormData((prev) => ({
-                ...prev,
-                photo: event.target?.result as string,
-            }));
-        };
-        reader.readAsDataURL(file);
     };
 
     return (
@@ -110,33 +144,28 @@ export default function CustomerFormModal({ customer, onClose, onSuccess }: Cust
                         {customer ? t('common.edit') : t('customers.addNew')}
                     </h2>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        {/* Photo */}
-                        <div className="text-center">
-                            <div
-                                onClick={() => fileInputRef.current?.click()}
-                                className="w-24 h-24 mx-auto rounded-full bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors overflow-hidden"
-                            >
-
-                                {formData.photo ? (
-                                    <img
-                                        src={formData.photo}
-                                        alt="Preview"
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <Camera className="w-8 h-8 text-gray-400" />
+                    <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-4">
+                        {/* Manual ID (Only for new customers) */}
+                        {!customer && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    {t('customers.customerId')}
+                                </label>
+                                <input
+                                    type="number"
+                                    value={formData.id}
+                                    onChange={(e) => setFormData((prev) => ({ ...prev, id: e.target.value }))}
+                                    className={`input ${errors.id ? 'border-red-500' : ''}`}
+                                    placeholder={t('customers.idPlaceholder')}
+                                />
+                                {errors.id && (
+                                    <p className="text-sm text-red-500 mt-1">{errors.id}</p>
                                 )}
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {t('customers.idHelper')}
+                                </p>
                             </div>
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="image/*"
-                                onChange={handlePhotoChange}
-                                className="hidden"
-                            />
-                            <p className="text-xs text-gray-500 mt-2">{t('customers.photo')} (optional)</p>
-                        </div>
+                        )}
 
                         {/* Name */}
                         <div>
@@ -163,9 +192,12 @@ export default function CustomerFormModal({ customer, onClose, onSuccess }: Cust
                             <input
                                 type="tel"
                                 value={formData.phone}
-                                onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
+                                onChange={(e) => {
+                                    const value = e.target.value.replace(/\D/g, '');
+                                    setFormData((prev) => ({ ...prev, phone: value }));
+                                }}
                                 className={`input ${errors.phone ? 'border-red-500' : ''}`}
-                                placeholder="03XX-XXXXXXX"
+                                placeholder="03XXXXXXXXX"
                                 dir="ltr"
                             />
                             {errors.phone && (
@@ -183,25 +215,49 @@ export default function CustomerFormModal({ customer, onClose, onSuccess }: Cust
                                 onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
                                 className="input"
                                 rows={2}
-                                placeholder="Shop address..."
+                                placeholder=""
                             />
                         </div>
 
+                        {/* Error Message */}
+                        {errors.form && (
+                            <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg">
+                                {errors.form}
+                            </div>
+                        )}
+
                         {/* Actions */}
-                        <div className="flex gap-3 pt-4">
-                            <button type="button" onClick={onClose} disabled={isSubmitting} className="btn btn-secondary flex-1">
-                                {t('common.cancel')}
-                            </button>
-                            <button type="submit" disabled={isSubmitting} className="btn btn-primary flex-1 flex items-center justify-center gap-2">
-                                {isSubmitting ? (
-                                    <>
+                        <div className="flex flex-col gap-3 pt-4">
+                            {!customer && (
+                                <button
+                                    type="button"
+                                    onClick={() => handleSubmit(null, true)}
+                                    disabled={isSubmitting}
+                                    className="btn bg-gray-900 text-white hover:bg-gray-800 flex items-center justify-center gap-2"
+                                >
+                                    {isSubmitting ? (
                                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        {t('common.loading')}
-                                    </>
-                                ) : (
-                                    t('common.save')
-                                )}
-                            </button>
+                                    ) : (
+                                        t('customers.saveAndAddMeasurements')
+                                    )}
+                                </button>
+                            )}
+
+                            <div className="flex gap-3">
+                                <button type="button" onClick={onClose} disabled={isSubmitting} className="btn btn-secondary flex-1">
+                                    {t('common.cancel')}
+                                </button>
+                                <button type="submit" disabled={isSubmitting} className="btn btn-primary flex-1 flex items-center justify-center gap-2">
+                                    {isSubmitting ? (
+                                        <>
+                                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            {t('common.loading')}
+                                        </>
+                                    ) : (
+                                        t('common.save')
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>

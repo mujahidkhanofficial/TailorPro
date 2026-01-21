@@ -4,6 +4,7 @@ interface ElectronAPI {
     saveFile: (content: string, filename: string) => Promise<{ success: boolean; path?: string }>;
     openFile: () => Promise<{ success: boolean; content?: string; path?: string }>;
     getAppVersion: () => Promise<string>;
+    printToPDF: (htmlContent: string) => Promise<{ success: boolean; path?: string; error?: string }>;
 }
 
 declare global {

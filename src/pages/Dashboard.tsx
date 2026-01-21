@@ -10,10 +10,9 @@ import {
     Calendar,
     AlertCircle,
     Plus,
-    ChevronRight,
     Check
 } from 'lucide-react';
-import { formatDate } from '@/utils/formatters';
+import { formatDaysRemaining } from '@/utils/formatters';
 import { ReactNode } from 'react';
 
 import PageTransition from '@/components/ui/PageTransition';
@@ -57,25 +56,25 @@ export default function Dashboard() {
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
-                    icon={<Users className="w-6 h-6" />}
+                    icon={<Users className="w-10 h-10" />}
                     label={t('dashboard.totalCustomers')}
                     value={customers.length}
                     color="blue"
                 />
                 <StatCard
-                    icon={<ShoppingBag className="w-6 h-6" />}
+                    icon={<ShoppingBag className="w-10 h-10" />}
                     label={t('dashboard.pendingOrders')}
                     value={pendingOrders.length}
                     color="yellow"
                 />
                 <StatCard
-                    icon={<Calendar className="w-6 h-6" />}
+                    icon={<Calendar className="w-10 h-10" />}
                     label={t('dashboard.dueToday')}
                     value={dueTodayOrders.length}
                     color="green"
                 />
                 <StatCard
-                    icon={<AlertCircle className="w-6 h-6" />}
+                    icon={<AlertCircle className="w-10 h-10" />}
                     label={t('dashboard.overdue')}
                     value={overdueOrders.length}
                     color="red"
@@ -87,9 +86,9 @@ export default function Dashboard() {
 
                 {/* Left Column: Due Today */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="card h-full flex flex-col">
+                    <div className="bg-white rounded-xl border border-gray-200 p-6 h-full flex flex-col">
                         <h2 className="text-lg font-bold mb-6 flex items-center gap-3 text-gray-800">
-                            <div className="p-2.5 bg-warning-50 text-warning-600 rounded-xl shadow-sm">
+                            <div className="bg-emerald-500 p-2.5 rounded-xl text-white">
                                 <Calendar className="w-5 h-5" />
                             </div>
                             {t('dashboard.dueToday')}
@@ -108,30 +107,30 @@ export default function Dashboard() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {dueTodayOrders.map((order) => (
-                                    <Link
-                                        key={order.id}
-                                        to={`/orders/${order.id}`}
-                                        className="block p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-primary-200/60 transition-all duration-300 group"
-                                    >
-                                        <div className="flex justify-between items-center">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-1.5 h-10 bg-success-500 rounded-full shadow-sm"></div>
-                                                <div>
-                                                    <p className="font-bold text-gray-900 group-hover:text-primary-600 transition-colors">
-                                                        {t(`garments.${order.garmentType}`)}
-                                                    </p>
-                                                    <p className="text-xs font-medium text-gray-500">
-                                                        {t(`orders.status${order.status.charAt(0).toUpperCase() + order.status.slice(1).replace('_', '')}`)}
-                                                    </p>
-                                                </div>
+                                {dueTodayOrders.map((order) => {
+                                    const customer = customers.find(c => c.id === order.customerId);
+                                    return (
+                                        <Link
+                                            key={order.id}
+                                            to={`/orders/${order.id}`}
+                                            className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-200 flex group"
+                                        >
+                                            {/* Icon Section */}
+                                            <div className="bg-emerald-500 w-16 flex items-center justify-center shrink-0">
+                                                <Calendar className="w-6 h-6 text-white" />
                                             </div>
-                                            <span className="text-xs font-bold text-success-700 bg-success-50 px-2.5 py-1 rounded-full border border-success-100 shadow-sm">
-                                                {formatDate(order.dueDate)}
-                                            </span>
-                                        </div>
-                                    </Link>
-                                ))}
+                                            {/* Content Section */}
+                                            <div className="flex-1 p-3 flex flex-col justify-center min-w-0">
+                                                <p className="font-bold text-gray-900 group-hover:text-primary-600 transition-colors truncate">
+                                                    {customer?.name || 'Unknown'}
+                                                </p>
+                                                <p className="text-xs text-gray-500">
+                                                    {customer?.phone} • Order #{order.id}
+                                                </p>
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -140,45 +139,48 @@ export default function Dashboard() {
                 {/* Right Column: Overdue */}
                 <div className="space-y-6">
                     {overdueOrders.length > 0 ? (
-                        <div className="card border-danger-100 bg-gradient-to-b from-danger-50/30 to-white">
-                            <h2 className="text-lg font-bold mb-6 flex items-center gap-3 text-danger-700">
-                                <div className="p-2.5 bg-danger-100 rounded-xl shadow-sm text-danger-600">
+                        <div className="card">
+                            <h2 className="text-lg font-bold mb-6 flex items-center gap-3 text-gray-800">
+                                <div className="bg-red-500 p-2.5 rounded-xl text-white">
                                     <AlertCircle className="w-5 h-5" />
                                 </div>
                                 {t('dashboard.overdue')}
                             </h2>
                             <div className="space-y-3">
-                                {overdueOrders.map((order) => (
-                                    <Link
-                                        key={order.id}
-                                        to={`/orders/${order.id}`}
-                                        className="block p-3 bg-white rounded-xl shadow-sm border border-danger-100 hover:shadow-md hover:border-danger-200 transition-all group"
-                                    >
-                                        <div className="flex justify-between items-center">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-1 h-8 bg-danger-500 rounded-full"></div>
-                                                <div>
-                                                    <p className="font-bold text-sm text-gray-900 group-hover:text-danger-600 transition-colors">
-                                                        {t(`garments.${order.garmentType}`)}
-                                                    </p>
-                                                    <p className="text-xs text-danger-600 font-medium flex items-center gap-1">
-                                                        <span>⚠️</span> {formatDate(order.dueDate)}
-                                                    </p>
-                                                </div>
+                                {overdueOrders.map((order) => {
+                                    const customer = customers.find(c => c.id === order.customerId);
+                                    const daysInfo = formatDaysRemaining(order.dueDate);
+                                    return (
+                                        <Link
+                                            key={order.id}
+                                            to={`/orders/${order.id}`}
+                                            className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-200 flex group"
+                                        >
+                                            {/* Icon Section */}
+                                            <div className="bg-red-500 w-14 flex items-center justify-center shrink-0">
+                                                <AlertCircle className="w-5 h-5 text-white" />
                                             </div>
-                                            <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-danger-500" />
-                                        </div>
-                                    </Link>
-                                ))}
+                                            {/* Content Section */}
+                                            <div className="flex-1 p-3 flex flex-col justify-center min-w-0">
+                                                <p className="font-bold text-sm text-gray-900 group-hover:text-red-600 transition-colors truncate">
+                                                    {customer?.name || 'Unknown'}
+                                                </p>
+                                                <p className="text-xs text-red-600 font-medium">
+                                                    ⚠️ {daysInfo.text}
+                                                </p>
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
                             </div>
                         </div>
                     ) : (
-                        <div className="card bg-gradient-to-br from-success-50 to-emerald-50/30 border-success-100 flex flex-col items-center justify-center text-center p-8 h-full">
-                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg shadow-success-100 mb-4 animate-in zoom-in duration-300">
-                                <Check className="w-8 h-8 text-success-500" />
+                        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col items-center justify-center text-center p-8 h-full">
+                            <div className="bg-emerald-500 w-16 h-16 rounded-xl flex items-center justify-center mb-4">
+                                <Check className="w-8 h-8 text-white" />
                             </div>
-                            <h3 className="font-bold text-success-800 text-lg">All Caught Up!</h3>
-                            <p className="text-success-600 text-sm mt-1">No overdue orders pending.</p>
+                            <h3 className="font-bold text-gray-900 text-lg">{t('dashboard.allCaughtUp')}</h3>
+                            <p className="text-gray-500 text-sm mt-1">{t('dashboard.noOverdueOrders')}</p>
                         </div>
                     )}
                 </div>
@@ -188,7 +190,7 @@ export default function Dashboard() {
 
             {!onboardingCompleted && (
                 <OnboardingWizard
-                    onComplete={() => { }} // Store handles state update, this is for any extra logic
+                    onComplete={() => { }}
                     onOpenNewOrder={() => setIsModalOpen(true)}
                 />
             )}
@@ -201,53 +203,32 @@ function StatCard({
     label,
     value,
     color,
-    trend,
 }: {
     icon: ReactNode;
     label: string;
     value: number;
     color: 'blue' | 'yellow' | 'green' | 'red';
-    trend?: string;
 }) {
-    const gradients = {
-        blue: 'from-primary-50 to-white border-primary-200',
-        yellow: 'from-warning-50 to-white border-warning-200',
-        green: 'from-success-50 to-white border-success-200',
-        red: 'from-danger-50 to-white border-danger-200',
-    };
-
-    const iconStyles = {
-        blue: 'text-primary-600 bg-white border-2 border-primary-200 shadow-sm',
-        yellow: 'text-warning-600 bg-white border-2 border-warning-200 shadow-sm',
-        green: 'text-success-600 bg-white border-2 border-success-200 shadow-sm',
-        red: 'text-danger-600 bg-white border-2 border-danger-200 shadow-sm',
-    };
-
-    const trendStyles = {
-        blue: 'text-primary-600 bg-primary-50 border border-primary-200',
-        yellow: 'text-warning-600 bg-warning-50 border border-warning-200',
-        green: 'text-success-600 bg-success-50 border border-success-200',
-        red: 'text-danger-600 bg-danger-50 border border-danger-200',
+    const iconBgColors = {
+        blue: 'bg-blue-500',
+        yellow: 'bg-amber-500',
+        green: 'bg-emerald-500',
+        red: 'bg-red-500',
     };
 
     return (
-        <div className={`bg-gradient-to-br ${gradients[color]} border rounded-2xl p-6 hover:shadow-lg transition-all duration-300 min-h-[130px]`}>
-            <div className="flex justify-between items-start">
-                <div>
-                    <p className="text-sm font-medium text-gray-500">{label}</p>
-                    <h3 className="text-3xl font-bold text-gray-800 mt-2">{value}</h3>
-                </div>
-                <div className={`p-3 rounded-xl ${iconStyles[color]}`}>
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-200 flex">
+            {/* Icon Section - Solid Color 1:1 */}
+            <div className={`${iconBgColors[color]} w-20 aspect-square flex items-center justify-center shrink-0`}>
+                <div className="text-white">
                     {icon}
                 </div>
             </div>
-            {trend && (
-                <div className="mt-4">
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${trendStyles[color]}`}>
-                        {trend}
-                    </span>
-                </div>
-            )}
+            {/* Content Section */}
+            <div className="flex-1 p-4 flex flex-col justify-center">
+                <p className="text-sm font-medium text-gray-500">{label}</p>
+                <h3 className="text-3xl font-bold text-gray-900 mt-1">{value}</h3>
+            </div>
         </div>
     );
 }

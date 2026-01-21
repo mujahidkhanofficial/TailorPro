@@ -1,12 +1,10 @@
 import Dexie, { Table } from 'dexie';
 
-// Types
-export type GarmentType =
-    | 'sherwani'
-    | 'kurta_pajama'
-    | 'western_suit'
-    | 'pathani_suit'
-    | 'casual';
+// ==========================================
+// 1. Interfaces & Types
+// ==========================================
+
+// GarmentType removed - measurements are now at customer level only
 
 export type OrderStatus =
     | 'new'
@@ -15,12 +13,13 @@ export type OrderStatus =
     | 'delivered'
     | 'completed';
 
+export type WorkerRole = 'cutter' | 'checker' | 'karigar';
+
 export interface Customer {
     id?: number;
     name: string;
     phone: string;
     address?: string;
-    photo?: string; // base64 encoded
     createdAt: Date;
     updatedAt: Date;
 }
@@ -28,23 +27,25 @@ export interface Customer {
 export interface Order {
     id?: number;
     customerId: number;
-    garmentType: GarmentType;
     status: OrderStatus;
     dueDate: Date;
     advancePayment?: string;
     deliveryNotes?: string;
+    cutterId?: number;
+    checkerId?: number;
+    karigarId?: number;
     createdAt: Date;
     updatedAt: Date;
 }
 
+// Legacy Measurement interface - keeping for backward compatibility
 export interface Measurement {
     id?: number;
     orderId: number;
-    template: GarmentType;
+    template?: string; // Legacy field, no longer used
     fields: Record<string, string>;
 }
 
-// NEW: Customer-level measurements (not order-specific)
 export interface CustomerMeasurement {
     id?: number;
     customerId: number;
@@ -54,28 +55,89 @@ export interface CustomerMeasurement {
     updatedAt: Date;
 }
 
-// Database Class
+export interface Settings {
+    id?: number;
+    shopName: string;
+    address: string;
+    phone1: string;
+    phone2: string;
+    updatedAt: Date;
+}
+
+export interface Worker {
+    id?: number;
+    name: string;
+    phone?: string;
+    role: WorkerRole;
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+// ==========================================
+// 2. Database Class
+// ==========================================
+
 class TailorProDB extends Dexie {
-    customers!: Table<Customer, number>;
-    orders!: Table<Order, number>;
-    measurements!: Table<Measurement, number>;
-    customerMeasurements!: Table<CustomerMeasurement, number>;
+    public customers!: Table<Customer, number>;
+    public orders!: Table<Order, number>;
+    public measurements!: Table<Measurement, number>;
+    public customerMeasurements!: Table<CustomerMeasurement, number>;
+    public settings!: Table<Settings, number>;
+    public workers!: Table<Worker, number>;
 
     constructor() {
         super('TailorProDB');
 
+        // Schema Versions
         this.version(1).stores({
             customers: '++id, name, phone, createdAt',
             orders: '++id, customerId, status, dueDate, createdAt',
             measurements: '++id, orderId, template',
         });
 
-        // Version 2: Add customer-level measurements
         this.version(2).stores({
             customers: '++id, name, phone, createdAt',
             orders: '++id, customerId, status, dueDate, createdAt',
             measurements: '++id, orderId, template',
             customerMeasurements: '++id, customerId, updatedAt',
+        });
+
+        this.version(3).stores({
+            customers: '++id, name, phone, createdAt',
+            orders: '++id, customerId, status, dueDate, createdAt',
+            measurements: '++id, orderId, template',
+            customerMeasurements: '++id, customerId, updatedAt',
+            settings: '++id, updatedAt'
+        });
+
+        // Version 4: Add workers table and worker assignments to orders
+        this.version(4).stores({
+            customers: '++id, name, phone, createdAt',
+            orders: '++id, customerId, status, dueDate, createdAt, cutterId, checkerId, karigarId',
+            measurements: '++id, orderId, template',
+            customerMeasurements: '++id, customerId, updatedAt',
+            settings: '++id, updatedAt',
+            workers: '++id, name, role, isActive, createdAt'
+        });
+
+        // Version 5: Remove garmentType dependency - measurements at customer level only
+        this.version(5).stores({
+            customers: '++id, name, phone, createdAt',
+            orders: '++id, customerId, status, dueDate, createdAt, cutterId, checkerId, karigarId',
+            measurements: '++id, orderId', // template field removed
+            customerMeasurements: '++id, customerId, updatedAt',
+            settings: '++id, updatedAt',
+            workers: '++id, name, role, isActive, createdAt'
+        });
+        // Version 6: Enforce unique phone
+        this.version(6).stores({
+            customers: '++id, name, &phone, createdAt',
+            orders: '++id, customerId, status, dueDate, createdAt, cutterId, checkerId, karigarId',
+            measurements: '++id, orderId',
+            customerMeasurements: '++id, customerId, updatedAt',
+            settings: '++id, updatedAt',
+            workers: '++id, name, role, isActive, createdAt'
         });
     }
 }
@@ -83,14 +145,17 @@ class TailorProDB extends Dexie {
 // Export singleton instance
 export const db = new TailorProDB();
 
-// Helper for getting today's date range
+// ==========================================
+// 3. Global Helpers
+// ==========================================
+
 export function getTodayRange(): { start: Date; end: Date } {
     const today = new Date();
     const start = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
     const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
     return { start, end };
 }
-// Helper for downloading blobs
+
 export function downloadBlob(blob: Blob, filename: string) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

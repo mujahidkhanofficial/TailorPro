@@ -64,30 +64,30 @@ export const useOrderStore = create<OrderState>((set, get) => ({
             const orders = await db.orders.toArray();
 
             // Pending (Active)
-            const pendingOrders = orders.filter((o) => !['completed', 'delivered'].includes(o.status));
+            const pendingOrders = orders.filter((o: Order) => !['completed', 'delivered'].includes(o.status));
 
             // Due today (not completed/delivered)
             const dueTodayOrders = await db.orders
                 .where('dueDate')
                 .between(start, end)
-                .filter((o) => !['completed', 'delivered'].includes(o.status))
+                .filter((o: Order) => !['completed', 'delivered'].includes(o.status))
                 .toArray();
 
             // Overdue (past due date, not completed/delivered)
             const overdueOrders = await db.orders
                 .where('dueDate')
                 .below(start)
-                .filter((o) => !['completed', 'delivered'].includes(o.status))
+                .filter((o: Order) => !['completed', 'delivered'].includes(o.status))
                 .toArray();
 
             // Calculate Monthly Revenue (sum of advancePayment for orders created this month)
             // Note: In a real app, you'd probably have a separate 'Payments' table or 'price' field.
             // Here we assume advancePayment string contains the amount (e.g. "5000" or "Rs. 5000")
             const monthlyOrders = orders.filter(
-                (o) => o.createdAt >= startOfMonth && o.createdAt <= endOfMonth
+                (o: Order) => o.createdAt >= startOfMonth && o.createdAt <= endOfMonth
             );
 
-            const monthlyRevenue = monthlyOrders.reduce((total, order) => {
+            const monthlyRevenue = monthlyOrders.reduce((total: number, order: Order) => {
                 const amountStr = order.advancePayment?.replace(/[^0-9.]/g, '') || '0';
                 return total + (parseFloat(amountStr) || 0);
             }, 0);

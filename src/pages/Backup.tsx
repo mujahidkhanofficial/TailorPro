@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { db } from '@/db/database';
+import { db, Customer, Order } from '@/db/database';
 import PageTransition from '@/components/ui/PageTransition';
 import { Save, FileText, Upload, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -81,10 +81,10 @@ export default function Backup() {
 
             // Build CSV
             const headers = ['Name', 'Phone', 'Address', 'Total Orders', 'Last Order Date'];
-            const rows = customers.map((c) => {
-                const customerOrders = orders.filter((o) => o.customerId === c.id);
+            const rows = customers.map((c: Customer) => {
+                const customerOrders = orders.filter((o: Order) => o.customerId === c.id);
                 const lastOrder = customerOrders.sort(
-                    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                    (a: Order, b: Order) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
                 )[0];
 
                 return [

@@ -1,4 +1,4 @@
-import { GarmentType } from './database';
+// GarmentType import removed - no longer needed
 
 // Standardized measurement fields (matching reference slip)
 export const measurementFields = [
@@ -102,22 +102,8 @@ export const designOptions = [
     { key: 'fancyButton', labelEn: 'Fancy Button', labelUr: 'فینسی بٹن' },
 ];
 
-// Legacy templates (for existing orders - do not remove)
-export const measurementTemplates: Record<GarmentType, string[]> = {
-    sherwani: ['chest', 'waist', 'shoulder', 'armhole', 'length', 'sleeve', 'collar'],
-    kurta_pajama: ['chest', 'waist', 'shoulder', 'length', 'sleeve', 'pajama_waist', 'pajama_length'],
-    western_suit: ['chest', 'waist', 'shoulder', 'jacket_length', 'sleeve', 'trouser_waist', 'trouser_length'],
-    pathani_suit: ['chest', 'shoulder', 'length', 'sleeve', 'shalwar_waist', 'shalwar_length'],
-    casual: ['chest', 'waist', 'shoulder', 'length', 'sleeve'],
-};
-
-export const garmentTypeOptions: { value: GarmentType; label: string }[] = [
-    { value: 'sherwani', label: 'garments.sherwani' },
-    { value: 'kurta_pajama', label: 'garments.kurta_pajama' },
-    { value: 'western_suit', label: 'garments.western_suit' },
-    { value: 'pathani_suit', label: 'garments.pathani_suit' },
-    { value: 'casual', label: 'garments.casual' },
-];
+// GarmentType templates removed - measurements are now at customer level only
+// Using measurementFields and designOptions defined above for CustomerMeasurement
 
 export const orderStatusOptions: { value: string; label: string; color: string }[] = [
     { value: 'new', label: 'orders.statusNew', color: 'bg-blue-100 text-blue-800' },

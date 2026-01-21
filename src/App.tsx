@@ -8,6 +8,7 @@ import Customers from '@/pages/Customers';
 import CustomerDetail from '@/pages/CustomerDetail';
 import Orders from '@/pages/Orders';
 import OrderDetail from '@/pages/OrderDetail';
+import Workers from '@/pages/Workers';
 import Backup from '@/pages/Backup';
 import Settings from '@/pages/Settings';
 
@@ -33,7 +34,9 @@ function App() {
                     <Route path="/customers/:id" element={<CustomerDetail />} />
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/orders/:id" element={<OrderDetail />} />
+                    <Route path="/workers" element={<Workers />} />
                     <Route path="/backup" element={<Backup />} />
+
                     <Route path="/settings" element={<Settings />} />
                 </Routes>
             </AppLayout>

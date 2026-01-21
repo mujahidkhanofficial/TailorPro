@@ -1,20 +1,31 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { db, Customer, Order, Measurement, OrderStatus } from '@/db/database';
+import { db, Customer, Order, CustomerMeasurement, OrderStatus } from '@/db/database';
 import { useOrderStore } from '@/stores/orderStore';
-import { orderStatusOptions, measurementTemplates } from '@/db/templates';
-import { formatDate } from '@/utils/formatters';
-import { useAutosave } from '@/hooks/useAutosave';
-import { Save, CheckCircle, AlertCircle } from 'lucide-react'; // For indicator icons
+import {
+    orderStatusOptions,
+    measurementFields,
+    collarNokOptions,
+    banPattiOptions,
+    cuffOptions,
+    frontPocketOptions,
+    sidePocketOptions,
+    frontStripOptions,
+    hemStyleOptions,
+    shalwarFarmaishOptions
+} from '@/db/templates';
+import { formatDate, formatDaysRemaining } from '@/utils/formatters';
+import { Calendar, User, Phone, FileText, Banknote } from 'lucide-react';
 
 export default function OrderDetail() {
     const { id } = useParams<{ id: string }>();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isUrdu = i18n.language === 'ur';
     const { updateOrderStatus } = useOrderStore();
     const [order, setOrder] = useState<Order | null>(null);
     const [customer, setCustomer] = useState<Customer | null>(null);
-    const [measurement, setMeasurement] = useState<Measurement | null>(null);
+    const [customerMeasurement, setCustomerMeasurement] = useState<CustomerMeasurement | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -33,11 +44,14 @@ export default function OrderDetail() {
             const customerData = await db.customers.get(orderData.customerId);
             setCustomer(customerData || null);
 
-            const measurementData = await db.measurements
-                .where('orderId')
-                .equals(orderId)
-                .first();
-            setMeasurement(measurementData || null);
+            // Load customer measurements (not order measurements)
+            if (customerData?.id) {
+                const measurement = await db.customerMeasurements
+                    .where('customerId')
+                    .equals(customerData.id)
+                    .first();
+                setCustomerMeasurement(measurement || null);
+            }
         }
 
         setLoading(false);
@@ -49,37 +63,56 @@ export default function OrderDetail() {
         setOrder({ ...order, status: newStatus });
     };
 
-    const saveMeasurements = useCallback(async (m: Measurement | null) => {
-        if (!m || !order?.id) return;
+    // Helper to get translated field label
+    const getFieldLabel = (key: string) => {
+        // Check standard fields
+        const field = measurementFields.find(f => f.key === key);
+        if (field) return isUrdu ? field.labelUr : field.labelEn;
 
-        if (m.id) {
-            await db.measurements.update(m.id, { fields: m.fields });
-        } else {
-            const newId = await db.measurements.add({
-                orderId: order.id,
-                template: m.template,
-                fields: m.fields,
-            });
-            setMeasurement((prev) => (prev ? { ...prev, id: newId } : null));
+        // Check custom fields
+        const customLabels: Record<string, { en: string; ur: string }> = {
+            collarNok: { en: 'Collar Nok', ur: 'کالر نوک' },
+            banPatti: { en: 'Ban Patti', ur: 'بین پٹی' },
+            cuff: { en: 'Cuff', ur: 'کف' },
+            frontPocket: { en: 'Front Pocket', ur: 'سامنے جیب' },
+            sidePocket: { en: 'Side Pocket', ur: 'سائیڈ جیب' },
+            frontStrip: { en: 'Front Strip', ur: 'سامنے کی پٹی' },
+            hemStyle: { en: 'Hem Style', ur: 'دامن' },
+            shalwarFarmaish: { en: 'Shalwar Farmaish', ur: 'شلوار فرمائش' },
+            shalwarWidth: { en: 'Shalwar Width', ur: 'شلوار چوڑائی' },
+            aasan: { en: 'Aasan', ur: 'آسن' },
+            bazuCenter: { en: 'Bazu Center', ur: 'بازو سینٹر' },
+        };
+
+        if (customLabels[key]) {
+            return isUrdu ? customLabels[key].ur : customLabels[key].en;
         }
-    }, [order?.id]);
 
-    const saveStatus = useAutosave(measurement, saveMeasurements, 800);
+        // Fallback to translation key or raw key
+        return t(`measurements.${key}`) !== `measurements.${key}` ? t(`measurements.${key}`) : key;
+    };
 
-    const handleMeasurementChange = (field: string, value: string) => {
-        if (!order?.id) return;
+    // Helper to get translated value for dropdowns
+    const getFieldValue = (key: string, value: string) => {
+        let options: { value: string; labelEn: string; labelUr: string }[] = [];
 
-        setMeasurement((prev) => {
-            const currentFields = prev?.fields || {};
-            const newFields = { ...currentFields, [field]: value };
+        switch (key) {
+            case 'collarNok': options = collarNokOptions; break;
+            case 'banPatti': options = banPattiOptions; break;
+            case 'cuff': options = cuffOptions; break;
+            case 'frontPocket': options = frontPocketOptions; break;
+            case 'sidePocket': options = sidePocketOptions; break;
+            case 'frontStrip': options = frontStripOptions; break;
+            case 'hemStyle': options = hemStyleOptions; break;
+            case 'shalwarFarmaish': options = shalwarFarmaishOptions; break;
+        }
 
-            return {
-                id: prev?.id,
-                orderId: order.id!,
-                template: order.garmentType,
-                fields: newFields,
-            };
-        });
+        if (options.length > 0) {
+            const opt = options.find(o => o.value === value);
+            if (opt) return isUrdu ? opt.labelUr : opt.labelEn;
+        }
+
+        return value;
     };
 
     if (loading) {
@@ -101,10 +134,8 @@ export default function OrderDetail() {
         );
     }
 
-    const templateFields = measurementTemplates[order.garmentType] || [];
-    const isOverdue =
-        new Date(order.dueDate) < new Date() &&
-        !['completed', 'delivered'].includes(order.status);
+    const daysInfo = formatDaysRemaining(order.dueDate, isUrdu);
+    const isOverdue = daysInfo.color.includes('red');
 
     return (
         <div className="space-y-6">
@@ -113,25 +144,52 @@ export default function OrderDetail() {
                 ← {t('orders.title')}
             </Link>
 
-            {/* Order Info */}
+            {/* Order Header Card */}
             <div className={`card ${isOverdue ? 'border-red-300 bg-red-50' : ''}`}>
                 <div className="flex flex-col md:flex-row justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">
-                            {t(`garments.${order.garmentType}`)}
-                        </h1>
+                    <div className="space-y-3">
+                        {/* Customer Info */}
                         {customer && (
-                            <Link
-                                to={`/customers/${customer.id}`}
-                                className="text-primary-600 hover:underline"
-                            >
-                                {customer.name} • {customer.phone}
-                            </Link>
+                            <div>
+                                <Link
+                                    to={`/customers/${customer.id}`}
+                                    className="text-2xl font-bold text-gray-900 hover:text-primary-600 transition-colors"
+                                >
+                                    {customer.name}
+                                </Link>
+                                <div className="flex items-center gap-4 mt-1 text-gray-600">
+                                    <span className="flex items-center gap-1">
+                                        <Phone className="w-4 h-4" />
+                                        {customer.phone}
+                                    </span>
+                                    <span className="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded">
+                                        ID: {customer.id}
+                                    </span>
+                                </div>
+                            </div>
                         )}
-                        <p className={`mt-2 ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
-                            {t('orders.dueDate')}: {formatDate(order.dueDate)}
-                            {isOverdue && ' ⚠️'}
-                        </p>
+
+                        {/* Order Info */}
+                        <div className="flex flex-wrap items-center gap-3">
+                            <span className="text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded-lg flex items-center gap-1">
+                                <FileText className="w-4 h-4" />
+                                Order #{order.id}
+                            </span>
+                            <span className="text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded-lg flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                {formatDate(order.createdAt)}
+                            </span>
+                        </div>
+
+                        {/* Due Date with Days Remaining */}
+                        <div className="flex items-center gap-3">
+                            <span className={`text-sm font-medium ${isOverdue ? 'text-red-600' : 'text-gray-700'}`}>
+                                {t('orders.dueDate')}: {formatDate(order.dueDate)}
+                            </span>
+                            <span className={`text-xs font-medium px-2 py-1 rounded-full ${daysInfo.color}`}>
+                                {daysInfo.text}
+                            </span>
+                        </div>
                     </div>
 
                     {/* Status Selector */}
@@ -153,16 +211,20 @@ export default function OrderDetail() {
                     </div>
                 </div>
 
-                {order.advancePayment && (
-                    <p className="mt-4 text-gray-600">
-                        💰 {t('orders.advancePayment')}: {order.advancePayment}
-                    </p>
-                )}
-                {order.deliveryNotes && (
-                    <p className="mt-2 text-gray-600">
-                        📝 {t('orders.deliveryNotes')}: {order.deliveryNotes}
-                    </p>
-                )}
+                {/* Payment & Notes */}
+                <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
+                    {order.advancePayment && (
+                        <p className="text-gray-600 flex items-center gap-2">
+                            <Banknote className="w-4 h-4 text-green-600" />
+                            {t('orders.advancePayment')}: <span className="font-medium">{order.advancePayment}</span>
+                        </p>
+                    )}
+                    {order.deliveryNotes && (
+                        <p className="text-gray-600 flex items-center gap-2">
+                            📝 {t('orders.deliveryNotes')}: {order.deliveryNotes}
+                        </p>
+                    )}
+                </div>
             </div>
 
             {/* Status Timeline */}
@@ -191,44 +253,49 @@ export default function OrderDetail() {
                 </div>
             </div>
 
-            {/* Measurements */}
+            {/* Customer Measurements (Read-Only View) */}
             <div className="card">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold flex items-center gap-3">
-                        {t('measurements.title')}
-                        {saveStatus === 'saving' && (
-                            <span className="text-xs font-normal text-gray-500 flex items-center gap-1 animate-pulse bg-gray-100 px-2 py-1 rounded-full">
-                                <Save className="w-3 h-3" /> {t('common.saving') || 'Saving...'}
-                            </span>
-                        )}
-                        {saveStatus === 'saved' && (
-                            <span className="text-xs font-normal text-green-600 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full">
-                                <CheckCircle className="w-3 h-3" /> {t('common.saved') || 'Saved'}
-                            </span>
-                        )}
-                        {saveStatus === 'error' && (
-                            <span className="text-xs font-normal text-red-600 flex items-center gap-1 bg-red-50 px-2 py-1 rounded-full">
-                                <AlertCircle className="w-3 h-3" /> Error
-                            </span>
-                        )}
+                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <User className="w-5 h-5 text-primary-600" />
+                        {isUrdu ? 'گاہک کی ناپ' : "Customer's Measurements"}
                     </h2>
+                    {customer && (
+                        <Link
+                            to={`/customers/${customer.id}`}
+                            className="text-sm text-primary-600 hover:underline"
+                        >
+                            {isUrdu ? 'ناپ تبدیل کریں' : 'Edit Measurements'} →
+                        </Link>
+                    )}
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {templateFields.map((field) => (
-                        <div key={field}>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                {t(`measurements.${field}`)}
-                            </label>
-                            <input
-                                type="text"
-                                value={measurement?.fields[field] || ''}
-                                onChange={(e) => handleMeasurementChange(field, e.target.value)}
-                                className="input"
-                                placeholder="—"
-                            />
-                        </div>
-                    ))}
-                </div>
+
+                {customerMeasurement && Object.keys(customerMeasurement.fields).length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                        {Object.entries(customerMeasurement.fields).map(([key, value]) => (
+                            value && (
+                                <div key={key} className="bg-gray-50 rounded-lg p-3 text-center">
+                                    <p className="text-xs text-gray-500 mb-1">{getFieldLabel(key)}</p>
+                                    <p className="text-lg font-semibold text-gray-900">{getFieldValue(key, value)}</p>
+                                </div>
+                            )
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                        <p className="text-gray-500">
+                            {isUrdu ? 'ابھی تک کوئی ناپ نہیں' : 'No measurements saved yet'}
+                        </p>
+                        {customer && (
+                            <Link
+                                to={`/customers/${customer.id}`}
+                                className="btn btn-primary mt-3 inline-flex items-center gap-2"
+                            >
+                                {isUrdu ? 'ناپ شامل کریں' : 'Add Measurements'}
+                            </Link>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOrderStore } from '@/stores/orderStore';
-import { db, Customer, GarmentType } from '@/db/database';
-import { garmentTypeOptions, measurementTemplates } from '@/db/templates';
+import { db, Customer } from '@/db/database';
 import { addDays, toInputDateFormat } from '@/utils/formatters';
-import { Check, Plus } from 'lucide-react';
+import { Check, Plus, Calendar } from 'lucide-react';
 import CustomerFormModal from './CustomerFormModal';
 
 interface OrderFormModalProps {
@@ -18,12 +17,10 @@ export default function OrderFormModal({ onClose }: OrderFormModalProps) {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [formData, setFormData] = useState({
         customerId: 0,
-        garmentType: 'sherwani' as GarmentType,
         dueDate: toInputDateFormat(addDays(new Date(), 3)),
         advancePayment: '',
         deliveryNotes: '',
     });
-    const [measurements, setMeasurements] = useState<Record<string, string>>({});
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [customerSearch, setCustomerSearch] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,6 +50,9 @@ export default function OrderFormModal({ onClose }: OrderFormModalProps) {
             c.phone.includes(customerSearch)
     );
 
+    // Get selected customer info
+    const selectedCustomer = customers.find((c) => c.id === formData.customerId);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -70,25 +70,14 @@ export default function OrderFormModal({ onClose }: OrderFormModalProps) {
 
         try {
             setIsSubmitting(true);
-            // Create order
-            const orderId = await addOrder({
+            // Create order (no garmentType anymore)
+            await addOrder({
                 customerId: formData.customerId,
-                garmentType: formData.garmentType,
                 status: 'new',
                 dueDate: new Date(formData.dueDate),
                 advancePayment: formData.advancePayment || undefined,
                 deliveryNotes: formData.deliveryNotes || undefined,
             });
-
-            // Save measurements if any
-            const hasAnyMeasurement = Object.values(measurements).some((v) => v.trim());
-            if (hasAnyMeasurement) {
-                await db.measurements.add({
-                    orderId,
-                    template: formData.garmentType,
-                    fields: measurements,
-                });
-            }
 
             onClose();
         } catch (error) {
@@ -98,16 +87,13 @@ export default function OrderFormModal({ onClose }: OrderFormModalProps) {
         }
     };
 
-
-    const currentTemplate = measurementTemplates[formData.garmentType] || [];
-
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
                 <div className="p-6">
                     <h2 className="text-xl font-bold mb-6">{t('orders.addNew')}</h2>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-5">
                         {/* Customer Selection */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -147,8 +133,15 @@ export default function OrderFormModal({ onClose }: OrderFormModalProps) {
                                             }}
                                             className="w-full text-start p-3 hover:bg-gray-50 border-b last:border-b-0"
                                         >
-                                            <p className="font-medium">{c.name}</p>
-                                            <p className="text-sm text-gray-500">{c.phone}</p>
+                                            <div className="flex justify-between items-center">
+                                                <div>
+                                                    <p className="font-medium">{c.name}</p>
+                                                    <p className="text-sm text-gray-500">{c.phone}</p>
+                                                </div>
+                                                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
+                                                    ID: {c.id}
+                                                </span>
+                                            </div>
                                         </button>
                                     ))}
 
@@ -164,22 +157,32 @@ export default function OrderFormModal({ onClose }: OrderFormModalProps) {
                             )}
 
 
-                            {formData.customerId > 0 && (
-                                <div className="p-3 bg-primary-50 rounded-lg flex justify-between items-center">
-                                    <span className="font-medium flex items-center gap-2">
-                                        <Check className="w-4 h-4 text-primary-600" />
-                                        {customers.find((c) => c.id === formData.customerId)?.name}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setFormData((prev) => ({ ...prev, customerId: 0 }));
-                                            setCustomerSearch('');
-                                        }}
-                                        className="text-sm text-gray-500 hover:text-red-500"
-                                    >
-                                        {t('common.change')}
-                                    </button>
+                            {formData.customerId > 0 && selectedCustomer && (
+                                <div className="p-3 bg-primary-50 rounded-lg border border-primary-200">
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex items-center gap-2">
+                                            <Check className="w-4 h-4 text-primary-600" />
+                                            <div>
+                                                <p className="font-medium text-gray-900">{selectedCustomer.name}</p>
+                                                <p className="text-sm text-gray-600">{selectedCustomer.phone}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs text-primary-600 bg-primary-100 px-2 py-1 rounded font-medium">
+                                                ID: {selectedCustomer.id}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setFormData((prev) => ({ ...prev, customerId: 0 }));
+                                                    setCustomerSearch('');
+                                                }}
+                                                className="text-sm text-gray-500 hover:text-red-500"
+                                            >
+                                                {t('common.change')}
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
@@ -188,30 +191,10 @@ export default function OrderFormModal({ onClose }: OrderFormModalProps) {
                             )}
                         </div>
 
-                        {/* Garment Type */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                {t('orders.garmentType')}
-                            </label>
-                            <select
-                                value={formData.garmentType}
-                                onChange={(e) => {
-                                    setFormData((prev) => ({ ...prev, garmentType: e.target.value as GarmentType }));
-                                    setMeasurements({});
-                                }}
-                                className="input"
-                            >
-                                {garmentTypeOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {t(option.label)}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
                         {/* Due Date */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <Calendar className="w-4 h-4 inline-block me-1" />
                                 {t('orders.dueDate')}
                             </label>
                             <input
@@ -221,31 +204,6 @@ export default function OrderFormModal({ onClose }: OrderFormModalProps) {
                                 className="input"
                                 dir="ltr"
                             />
-                        </div>
-
-                        {/* Measurements */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                {t('measurements.title')}
-                            </label>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                {currentTemplate.map((field) => (
-                                    <div key={field}>
-                                        <label className="block text-xs text-gray-500 mb-1">
-                                            {t(`measurements.${field}`)}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={measurements[field] || ''}
-                                            onChange={(e) =>
-                                                setMeasurements((prev) => ({ ...prev, [field]: e.target.value }))
-                                            }
-                                            className="input text-sm"
-                                            placeholder="—"
-                                        />
-                                    </div>
-                                ))}
-                            </div>
                         </div>
 
                         {/* Advance Payment */}

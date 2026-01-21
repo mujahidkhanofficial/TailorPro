@@ -7,6 +7,7 @@
         "dashboard": "ڈیش بورڈ",
         "customers": "گاہک",
         "orders": "آرڈرز",
+        "workers": "کاریگران",
         "backup": "بیک اپ",
         "settings": "ترتیبات"
     },
@@ -17,7 +18,9 @@
         "dueToday": "آج واجب الادا",
         "overdue": "میعاد ختم",
         "recentOrders": "حالیہ آرڈرز",
-        "noOrdersDueToday": "آج کوئی آرڈر واجب الادا نہیں"
+        "noOrdersDueToday": "آج کوئی آرڈر واجب الادا نہیں",
+        "allCaughtUp": "سب ہو گیا!",
+        "noOverdueOrders": "کوئی میعاد ختم آرڈر نہیں۔"
     },
     "customers": {
         "title": "گاہک",
@@ -26,17 +29,20 @@
         "name": "پورا نام",
         "phone": "فون نمبر",
         "address": "پتہ",
-        "photo": "تصویر",
+        "customerId": "کسٹمر آئی ڈی (اختیاری)",
+        "idPlaceholder": "خالی ہونے کی صورت میں خود کار",
+        "idHelper": "اپنے موجودہ رجسٹر نمبر سے مطابقت کے لیے اسے استعمال کریں",
         "noCustomers": "ابھی تک کوئی گاہک نہیں",
         "deleteConfirm": "کیا آپ واقعی اس گاہک کو حذف کرنا چاہتے ہیں؟",
-        "viewHistory": "آرڈر کی تاریخ دیکھیں"
+        "viewHistory": "آرڈر کی تاریخ دیکھیں",
+        "saveAndAddMeasurements": "محفوظ کریں اور پیمائش شامل کریں"
     },
     "orders": {
         "title": "آرڈرز",
         "addNew": "نیا آرڈر",
         "selectCustomer": "گاہک منتخب کریں",
-        "garmentType": "کپڑے کی قسم",
-        "dueDate": "تاریخ ادائیگی",
+        "orderDate": "تاریخِ حکم",
+        "dueDate": "تاریخِ ادائیگی",
         "advancePayment": "پیشگی ادائیگی",
         "deliveryNotes": "ترسیل نوٹس",
         "status": "حیثیت",
@@ -47,12 +53,24 @@
         "statusDelivered": "پہنچا دیا گیا",
         "statusCompleted": "مکمل"
     },
-    "garments": {
-        "sherwani": "شیروانی",
-        "kurta_pajama": "کرتا پاجامہ",
-        "western_suit": "مغربی سوٹ",
-        "pathani_suit": "پٹھانی سوٹ",
-        "casual": "کیژول شرٹ/پینٹ"
+    "workers": {
+        "title": "کاریگران",
+        "addNew": "نیا کاریگر",
+        "editWorker": "کاریگر میں ترمیم",
+        "search": "کاریگر تلاش کریں...",
+        "name": "نام",
+        "namePlaceholder": "کاریگر کا نام",
+        "phone": "فون",
+        "role": "کردار",
+        "activeStatus": "فعال",
+        "inactive": "غیر فعال",
+        "noWorkers": "ابھی تک کوئی کاریگر نہیں",
+        "nameRequired": "نام ضروری ہے",
+        "roles": {
+            "cutter": "کٹر",
+            "checker": "چیکر",
+            "karigar": "کاریگر"
+        }
     },
     "measurements": {
         "title": "ناپ",
@@ -92,6 +110,7 @@
     },
     "common": {
         "save": "محفوظ کریں",
+        "saving": "محفوظ ہو رہا ہے...",
         "cancel": "منسوخ",
         "delete": "حذف کریں",
         "edit": "ترمیم",
@@ -105,10 +124,16 @@
         "all": "سب",
         "change": "تبدیل کریں",
         "confirmDelete": "کیا آپ واقعی اسے حذف کرنا چاہتے ہیں؟",
-        "deleteSuccess": "کامیابی سے حذف ہو گیا"
+        "deleteSuccess": "کامیابی سے حذف ہو گیا",
+        "updateSuccess": "کامیابی سے اپڈیٹ ہو گیا",
+        "addSuccess": "کامیابی سے شامل ہو گیا",
+        "error": "ایک خرابی پیش آ گئی"
     },
     "validation": {
         "required": "یہ فیلڈ ضروری ہے",
-        "invalidPhone": "براہ کرم درست پاکستانی فون نمبر درج کریں"
+        "invalidPhone": "براہ کرم ایک درست پاکستانی فون نمبر درج کریں",
+        "invalidId": "غلط آئی ڈی",
+        "idExists": "کسٹمر آئی ڈی پہلے سے موجود ہے",
+        "phoneExists": "فون نمبر پہلے سے موجود ہے"
     }
 }

@@ -51,7 +51,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Urdu Mode - Force font execution */
+/* Urdu Mode - Global Scaling */
+html[lang="ur"] {
+  font-size: 18px;
+}
+
+/* Urdu Mode - Force font execution and readability */
 html[lang="ur"] body,
 html[lang="ur"] button,
 html[lang="ur"] input,
@@ -59,8 +64,10 @@ html[lang="ur"] select,
 html[lang="ur"] textarea,
 html[lang="ur"] [class*="text-"] {
   font-family: 'NotoNastaliqUrdu', serif !important;
-  line-height: 2 !important;
-  /* Nastaliq requires more height */
+  line-height: 2.2 !important;
+  /* Increased from 2 for better spacing */
+  font-weight: 500 !important;
+  /* Slightly bolder for better legibility */
 }
 
 /* Custom Scrollbar for Windows */
@@ -91,19 +98,19 @@ html[lang="ur"] [class*="text-"] {
 /* Button Base */
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 active:scale-95;
+    @apply px-6 py-2 rounded-lg font-bold transition-all duration-75 focus:outline-none border-b-4 active:border-b-0 active:mt-1;
   }
 
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 shadow-md shadow-primary-500/20 hover:shadow-primary-500/30 focus:ring-primary-500;
+    @apply bg-primary-600 text-white border-primary-800 hover:bg-primary-500 hover:border-primary-600 focus:ring-primary-500;
   }
 
   .btn-secondary {
-    @apply bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 focus:ring-gray-200;
+    @apply bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200 hover:border-gray-300 focus:ring-gray-300;
   }
 
   .btn-danger {
-    @apply bg-danger-500 text-white hover:bg-danger-600 shadow-md shadow-danger-500/20 focus:ring-danger-500;
+    @apply bg-[#ef4444] text-white border-[#b91c1c] hover:bg-[#f87171] hover:border-[#ef4444] focus:ring-[#ef4444];
   }
 
   .card {

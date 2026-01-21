@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "ES2020",
-        "module": "ESNext",
+        "module": "CommonJS",
         "moduleResolution": "Node",
         "lib": [
             "ES2020"
@@ -11,13 +11,10 @@
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "resolveJsonModule": true
+        "forceConsistentCasingInFileNames": true
     },
     "include": [
-        "electron/main.ts"
-    ],
-    "exclude": [
-        "electron/preload.ts"
+        "electron/preload.ts",
+        "electron/preload-preview.ts"
     ]
 }

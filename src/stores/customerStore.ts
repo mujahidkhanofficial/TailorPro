@@ -9,7 +9,7 @@ interface CustomerState {
 
     loadCustomers: () => Promise<void>;
     setSearchQuery: (query: string) => void;
-    addCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => Promise<number>;
+    addCustomer: (customer: Omit<Customer, 'createdAt' | 'updatedAt'>) => Promise<number>;
     updateCustomer: (id: number, data: Partial<Customer>) => Promise<void>;
     deleteCustomer: (id: number) => Promise<void>;
     selectCustomer: (customer: Customer | null) => void;
@@ -22,7 +22,10 @@ export const useCustomerStore = create<CustomerState>((set, get) => ({
     selectedCustomer: null,
 
     loadCustomers: async () => {
-        set({ loading: true });
+        const currentCustomers = get().customers;
+        if (currentCustomers.length === 0) {
+            set({ loading: true });
+        }
         try {
             const { searchQuery } = get();
             let customers: Customer[];
@@ -33,7 +36,8 @@ export const useCustomerStore = create<CustomerState>((set, get) => ({
                     .filter(
                         (c) =>
                             c.name.toLowerCase().includes(query) ||
-                            c.phone.includes(query)
+                            c.phone.includes(query) ||
+                            (c.id?.toString().includes(query) || false)
                     )
                     .toArray();
             } else {
