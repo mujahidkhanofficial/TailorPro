@@ -5,10 +5,12 @@ import { useOrderStore } from '@/stores/orderStore';
 import { db, Customer } from '@/db/database';
 import { orderStatusOptions } from '@/db/templates';
 import { formatDate, formatDaysRemaining } from '@/utils/formatters';
-import { Plus, ShoppingBag, Search, Calendar, Phone, Trash2, Wallet, Clock, CheckCircle, Truck, CheckSquare } from 'lucide-react';
+import { Plus, ShoppingBag, Search, Calendar, Phone, Trash2, Wallet, Clock, CheckCircle, Truck, CheckSquare, Printer } from 'lucide-react';
 import PageTransition from '@/components/ui/PageTransition';
 import Skeleton from '@/components/ui/Skeleton';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
+import MeasurementPrint from '@/components/forms/MeasurementPrint';
+import { CustomerMeasurement, Order } from '@/db/database';
 import toast from 'react-hot-toast';
 
 export default function Orders() {
@@ -30,6 +32,27 @@ export default function Orders() {
     // For now, let's load customers to ensure we have names.
     const [customerMap, setCustomerMap] = useState<Record<number, Customer>>({});
     const [deleteId, setDeleteId] = useState<number | null>(null);
+
+    // Print State
+    const [printData, setPrintData] = useState<{ customer: Customer; measurement: CustomerMeasurement; order: Order } | null>(null);
+
+    const handlePrintClick = async (e: React.MouseEvent, order: Order) => {
+        e.preventDefault(); // Prevent navigation
+
+        try {
+            const customer = customerMap[order.customerId];
+            const measurement = await db.customerMeasurements.where('customerId').equals(order.customerId).first();
+
+            if (customer && measurement) {
+                setPrintData({ customer, measurement, order });
+            } else {
+                toast.error(t('common.error'));
+            }
+        } catch (error) {
+            console.error('Failed to prepare print data:', error);
+            toast.error(t('common.error'));
+        }
+    };
 
     useEffect(() => {
         loadOrders();
@@ -278,16 +301,25 @@ export default function Orders() {
                                         {t(statusOption?.label || '')}
                                     </span>
 
-                                    <button
-                                        onClick={(e) => {
-                                            e.preventDefault(); // Prevent navigation
-                                            setDeleteId(order.id!);
-                                        }}
-                                        className="text-slate-500 hover:text-red-400 p-1 rounded-md hover:bg-slate-700 transition-colors"
-                                        title={t('common.delete')}
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
+                                    <div className="flex gap-1">
+                                        <button
+                                            onClick={(e) => handlePrintClick(e, order)}
+                                            className="text-slate-500 hover:text-blue-400 p-1 rounded-md hover:bg-slate-700 transition-colors"
+                                            title={t('common.printResult') || 'Print'}
+                                        >
+                                            <Printer className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.preventDefault(); // Prevent navigation
+                                                setDeleteId(order.id!);
+                                            }}
+                                            className="text-slate-500 hover:text-red-400 p-1 rounded-md hover:bg-slate-700 transition-colors"
+                                            title={t('common.delete')}
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
                             </Link>
                         );
@@ -301,6 +333,16 @@ export default function Orders() {
                 title={t('orders.deleteTitle')}
                 message={t('orders.deleteConfirm')}
             />
+
+            {/* Print Modal */}
+            {printData && (
+                <MeasurementPrint
+                    customer={printData.customer}
+                    measurement={printData.measurement}
+                    order={printData.order}
+                    onClose={() => setPrintData(null)}
+                />
+            )}
         </PageTransition>
     );
 }

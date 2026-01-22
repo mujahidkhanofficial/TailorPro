@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useOrderStore } from '@/stores/orderStore';
-import { db, Customer, Worker } from '@/db/database';
+import { db, Customer, Worker, Order, CustomerMeasurement } from '@/db/database';
 import { addDays, toInputDateFormat } from '@/utils/formatters';
-import { Check, Plus, Calendar, ArrowLeft, ChevronDown } from 'lucide-react';
+import { Check, Plus, Calendar, ArrowLeft, ChevronDown, Printer } from 'lucide-react';
 import CustomerFormModal from '@/components/forms/CustomerFormModal';
+import MeasurementPrint from '@/components/forms/MeasurementPrint';
 import PageTransition from '@/components/ui/PageTransition';
 
 export default function CreateOrder() {
@@ -34,6 +35,11 @@ export default function CreateOrder() {
     const [customerSearch, setCustomerSearch] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+
+    // Print State
+    const shouldPrint = useRef(false);
+    const [showPrintModal, setShowPrintModal] = useState(false);
+    const [printData, setPrintData] = useState<{ customer: Customer; measurement: CustomerMeasurement; order: Order } | null>(null);
 
     useEffect(() => {
         loadData();
@@ -85,7 +91,7 @@ export default function CreateOrder() {
         try {
             setIsSubmitting(true);
 
-            await addOrder({
+            const orderId = await addOrder({
                 customerId: formData.customerId,
                 status: 'new',
                 dueDate: new Date(formData.dueDate),
@@ -96,13 +102,32 @@ export default function CreateOrder() {
                 karigarId: formData.karigarId || undefined,
             });
 
-            // Navigate back to orders list
-            navigate('/orders');
+            if (shouldPrint.current) {
+                // Fetch data needed for printing
+                const customer = await db.customers.get(formData.customerId);
+                const measurement = await db.customerMeasurements.where('customerId').equals(formData.customerId).first();
+                const order = await db.orders.get(orderId);
+
+                if (customer && measurement && order) {
+                    setPrintData({ customer, measurement, order });
+                    setShowPrintModal(true);
+                } else {
+                    navigate('/orders');
+                }
+            } else {
+                navigate('/orders');
+            }
         } catch (error) {
             console.error('Error creating order:', error);
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const handleSaveAndPrint = (e: React.FormEvent) => {
+        e.preventDefault();
+        shouldPrint.current = true;
+        handleSubmit(e);
     };
 
     return (
@@ -358,7 +383,16 @@ export default function CreateOrder() {
                             <Link to="/orders" className="btn btn-secondary flex-1 text-center flex items-center justify-center">
                                 {t('common.cancel')}
                             </Link>
-                            <button type="submit" disabled={isSubmitting} className="btn btn-primary flex-1 flex items-center justify-center gap-2 py-3 text-lg">
+                            <button
+                                type="button"
+                                onClick={handleSaveAndPrint}
+                                disabled={isSubmitting || !formData.customerId}
+                                className="btn bg-blue-600 text-white border-blue-800 hover:bg-blue-500 flex-1 flex items-center justify-center gap-2"
+                            >
+                                <Printer className="w-5 h-5" />
+                                {t('common.saveAndPrint')}
+                            </button>
+                            <button type="submit" disabled={isSubmitting || !formData.customerId} className="btn btn-primary flex-1 flex items-center justify-center gap-2 py-3 text-lg">
                                 {isSubmitting ? (
                                     <>
                                         <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -373,6 +407,16 @@ export default function CreateOrder() {
                             </button>
                         </div>
                     </form>
+
+                    {/* Print Modal */}
+                    {showPrintModal && printData && (
+                        <MeasurementPrint
+                            customer={printData.customer}
+                            measurement={printData.measurement}
+                            order={printData.order}
+                            onClose={() => navigate('/orders')}
+                        />
+                    )}
                 </div>
             </div>
 

@@ -1,4 +1,4 @@
-import { CustomerMeasurement, Customer, db, Settings } from '@/db/database';
+import { CustomerMeasurement, Customer, db, Settings, Order } from '@/db/database';
 import { X, Printer } from 'lucide-react';
 import { generateMeasurementSlipHTML } from '@/utils/printHelpers';
 import { useState, useEffect } from 'react';
@@ -7,12 +7,14 @@ import toast from 'react-hot-toast';
 interface MeasurementPrintProps {
     customer: Customer;
     measurement: CustomerMeasurement;
+    order?: Order;
     onClose: () => void;
 }
 
 export default function MeasurementPrint({
     customer,
     measurement,
+    order,
     onClose,
 }: MeasurementPrintProps) {
     const [isPrinting, setIsPrinting] = useState(false);
@@ -25,29 +27,29 @@ export default function MeasurementPrint({
             const savedSettings = await db.settings.get(1);
             setSettings(savedSettings);
 
-            // Load Latest Order for Workers
-            if (customer.id) {
-                const latestOrder = await db.orders.where('customerId').equals(customer.id).reverse().first();
-                if (latestOrder) {
-                    const cutter = latestOrder.cutterId ? await db.workers.get(latestOrder.cutterId) : undefined;
-                    const checker = latestOrder.checkerId ? await db.workers.get(latestOrder.checkerId) : undefined;
-                    const karigar = latestOrder.karigarId ? await db.workers.get(latestOrder.karigarId) : undefined;
+            // Populate workers ONLY if an order is explicitly provided
+            if (order) {
+                const cutter = order.cutterId ? await db.workers.get(order.cutterId) : undefined;
+                const checker = order.checkerId ? await db.workers.get(order.checkerId) : undefined;
+                const karigar = order.karigarId ? await db.workers.get(order.karigarId) : undefined;
 
-                    setWorkerNames({
-                        cutter: cutter?.name,
-                        checker: checker?.name,
-                        karigar: karigar?.name
-                    });
-                }
+                setWorkerNames({
+                    cutter: cutter?.name,
+                    checker: checker?.name,
+                    karigar: karigar?.name
+                });
+            } else {
+                // Should we reset them? Yes, to be safe, though initial state is empty.
+                setWorkerNames({});
             }
         };
         loadData();
-    }, [customer.id]);
+    }, [order]);
 
     const handlePrint = async () => {
         setIsPrinting(true);
         try {
-            const html = generateMeasurementSlipHTML(customer, measurement, settings, workerNames);
+            const html = generateMeasurementSlipHTML(customer, measurement, settings, workerNames, order);
 
             if (window.electronAPI && window.electronAPI.printToPDF) {
                 const result = await window.electronAPI.printToPDF(html);
