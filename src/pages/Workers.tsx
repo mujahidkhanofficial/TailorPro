@@ -100,14 +100,13 @@ export default function Workers() {
                 </button>
             </div>
 
-
-            {/* Role Filter Tabs - Solid Minimal */}
+            {/* Role Filter Tabs - With 3D Effect */}
             <div className="flex flex-wrap gap-2">
                 <button
                     onClick={() => setRoleFilter('all')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${roleFilter === 'all'
-                        ? 'bg-gray-800 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${roleFilter === 'all'
+                        ? 'bg-gray-800 text-white border-gray-950'
+                        : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
                         }`}
                 >
                     <HardHat className="w-4 h-4" />
@@ -115,9 +114,9 @@ export default function Workers() {
                 </button>
                 <button
                     onClick={() => setRoleFilter('cutter')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${roleFilter === 'cutter'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${roleFilter === 'cutter'
+                        ? 'bg-blue-500 text-white border-blue-700'
+                        : 'bg-blue-100 text-blue-600 border-blue-300 hover:bg-blue-200'
                         }`}
                 >
                     <Scissors className="w-4 h-4" strokeWidth={2.5} />
@@ -125,9 +124,9 @@ export default function Workers() {
                 </button>
                 <button
                     onClick={() => setRoleFilter('checker')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${roleFilter === 'checker'
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${roleFilter === 'checker'
+                        ? 'bg-emerald-500 text-white border-emerald-700'
+                        : 'bg-emerald-100 text-emerald-600 border-emerald-300 hover:bg-emerald-200'
                         }`}
                 >
                     <CheckCircle2 className="w-4 h-4" strokeWidth={2.5} />
@@ -135,9 +134,9 @@ export default function Workers() {
                 </button>
                 <button
                     onClick={() => setRoleFilter('karigar')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${roleFilter === 'karigar'
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-orange-100 text-orange-600 hover:bg-orange-200'
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${roleFilter === 'karigar'
+                        ? 'bg-orange-500 text-white border-orange-700'
+                        : 'bg-orange-100 text-orange-600 border-orange-300 hover:bg-orange-200'
                         }`}
                 >
                     <Wrench className="w-4 h-4" strokeWidth={2.5} />
@@ -145,11 +144,10 @@ export default function Workers() {
                 </button>
             </div>
 
-            {/* Search - Card Style */}
-            {/* Search - Card Style */}
+            {/* Search - Card Style with 3D Effect */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white">
-                    <div className="bg-gray-800 w-12 flex items-center justify-center shrink-0">
+                <div className="flex rounded-xl overflow-hidden border border-gray-200 border-b-4 border-b-gray-300 bg-white shadow-sm">
+                    <div className="bg-gray-800 w-12 flex items-center justify-center shrink-0 border-b-4 border-b-gray-950">
                         <Search className="w-5 h-5 text-white" />
                     </div>
                     <input

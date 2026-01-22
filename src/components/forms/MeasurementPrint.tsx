@@ -17,19 +17,37 @@ export default function MeasurementPrint({
 }: MeasurementPrintProps) {
     const [isPrinting, setIsPrinting] = useState(false);
     const [settings, setSettings] = useState<Settings | undefined>(undefined);
+    const [workerNames, setWorkerNames] = useState<{ cutter?: string; checker?: string; karigar?: string }>({});
 
     useEffect(() => {
-        const loadSettings = async () => {
+        const loadData = async () => {
+            // Load Settings
             const savedSettings = await db.settings.get(1);
             setSettings(savedSettings);
+
+            // Load Latest Order for Workers
+            if (customer.id) {
+                const latestOrder = await db.orders.where('customerId').equals(customer.id).reverse().first();
+                if (latestOrder) {
+                    const cutter = latestOrder.cutterId ? await db.workers.get(latestOrder.cutterId) : undefined;
+                    const checker = latestOrder.checkerId ? await db.workers.get(latestOrder.checkerId) : undefined;
+                    const karigar = latestOrder.karigarId ? await db.workers.get(latestOrder.karigarId) : undefined;
+
+                    setWorkerNames({
+                        cutter: cutter?.name,
+                        checker: checker?.name,
+                        karigar: karigar?.name
+                    });
+                }
+            }
         };
-        loadSettings();
-    }, []);
+        loadData();
+    }, [customer.id]);
 
     const handlePrint = async () => {
         setIsPrinting(true);
         try {
-            const html = generateMeasurementSlipHTML(customer, measurement, settings);
+            const html = generateMeasurementSlipHTML(customer, measurement, settings, workerNames);
 
             if (window.electronAPI && window.electronAPI.printToPDF) {
                 const result = await window.electronAPI.printToPDF(html);

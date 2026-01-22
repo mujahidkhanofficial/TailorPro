@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOrderStore } from '@/stores/orderStore';
-import { db, Customer } from '@/db/database';
+import { db, Customer, Worker } from '@/db/database';
 import { addDays, toInputDateFormat } from '@/utils/formatters';
 import { Check, Plus, Calendar } from 'lucide-react';
 import CustomerFormModal from './CustomerFormModal';
@@ -15,11 +15,15 @@ export default function OrderFormModal({ onClose }: OrderFormModalProps) {
     const { addOrder } = useOrderStore();
 
     const [customers, setCustomers] = useState<Customer[]>([]);
+    const [activeWorkers, setActiveWorkers] = useState<Worker[]>([]);
     const [formData, setFormData] = useState({
         customerId: 0,
         dueDate: toInputDateFormat(addDays(new Date(), 3)),
         advancePayment: '',
         deliveryNotes: '',
+        cutterId: 0,
+        checkerId: 0,
+        karigarId: 0,
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [customerSearch, setCustomerSearch] = useState('');
@@ -42,6 +46,10 @@ export default function OrderFormModal({ onClose }: OrderFormModalProps) {
     async function loadCustomers() {
         const allCustomers = await db.customers.toArray();
         setCustomers(allCustomers);
+
+        const allWorkers = await db.workers.toArray();
+        const activeWorkers = allWorkers.filter(w => w.isActive);
+        setActiveWorkers(activeWorkers);
     }
 
     const filteredCustomers = customers.filter(
@@ -77,6 +85,9 @@ export default function OrderFormModal({ onClose }: OrderFormModalProps) {
                 dueDate: new Date(formData.dueDate),
                 advancePayment: formData.advancePayment || undefined,
                 deliveryNotes: formData.deliveryNotes || undefined,
+                cutterId: formData.cutterId || undefined,
+                checkerId: formData.checkerId || undefined,
+                karigarId: formData.karigarId || undefined,
             });
 
             onClose();
@@ -101,14 +112,14 @@ export default function OrderFormModal({ onClose }: OrderFormModalProps) {
                             </label>
                             {customers.length === 0 ? (
                                 <div className="p-4 bg-yellow-50 text-yellow-800 rounded-lg text-sm mb-4 border border-yellow-200">
-                                    <p className="font-medium mb-1">No customers found</p>
+                                    <p className="font-medium mb-1">{t('customers.noCustomersFound')}</p>
                                     <button
                                         type="button"
                                         onClick={() => setIsCustomerModalOpen(true)}
                                         className="text-primary-600 font-medium hover:underline flex items-center gap-1 mt-2"
                                     >
                                         <Plus className="w-4 h-4" />
-                                        Add New Customer
+                                        {t('customers.addNewButton')}
                                     </button>
                                 </div>
                             ) : (
@@ -151,7 +162,7 @@ export default function OrderFormModal({ onClose }: OrderFormModalProps) {
                                         className="w-full text-start p-3 hover:bg-primary-50 text-primary-600 flex items-center gap-2"
                                     >
                                         <Plus className="w-4 h-4" />
-                                        <span className="font-medium">Create "{customerSearch}"</span>
+                                        <span className="font-medium">{t('customers.createWithName', { name: customerSearch })}</span>
                                     </button>
                                 </div>
                             )}
@@ -216,7 +227,7 @@ export default function OrderFormModal({ onClose }: OrderFormModalProps) {
                                 value={formData.advancePayment}
                                 onChange={(e) => setFormData((prev) => ({ ...prev, advancePayment: e.target.value }))}
                                 className="input"
-                                placeholder="Rs. 5000"
+                                placeholder={t('orders.paymentPlaceholder')}
                             />
                         </div>
 
@@ -230,8 +241,65 @@ export default function OrderFormModal({ onClose }: OrderFormModalProps) {
                                 onChange={(e) => setFormData((prev) => ({ ...prev, deliveryNotes: e.target.value }))}
                                 className="input"
                                 rows={2}
-                                placeholder="Any special instructions..."
+                                placeholder={t('orders.notesPlaceholder')}
                             />
+                        </div>
+
+                        {/* Worker Assignment Section */}
+                        <div className="border-t pt-4">
+                            <h3 className="text-sm font-semibold text-gray-900 mb-3">{t('workers.assignment')}</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {/* Cutter */}
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                        {t('workers.cutter')}
+                                    </label>
+                                    <select
+                                        value={formData.cutterId || ''}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, cutterId: Number(e.target.value) || 0 }))}
+                                        className="input text-sm py-1.5"
+                                    >
+                                        <option value="">{t('common.select')}</option>
+                                        {activeWorkers.filter(w => w.role === 'cutter').map(w => (
+                                            <option key={w.id} value={w.id}>{w.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Checker */}
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                        {t('workers.checker')}
+                                    </label>
+                                    <select
+                                        value={formData.checkerId || ''}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, checkerId: Number(e.target.value) || 0 }))}
+                                        className="input text-sm py-1.5"
+                                    >
+                                        <option value="">{t('common.select')}</option>
+                                        {activeWorkers.filter(w => w.role === 'checker').map(w => (
+                                            <option key={w.id} value={w.id}>{w.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Karigar */}
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                        {t('workers.karigar')}
+                                    </label>
+                                    <select
+                                        value={formData.karigarId || ''}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, karigarId: Number(e.target.value) || 0 }))}
+                                        className="input text-sm py-1.5"
+                                    >
+                                        <option value="">{t('common.select')}</option>
+                                        {activeWorkers.filter(w => w.role === 'karigar').map(w => (
+                                            <option key={w.id} value={w.id}>{w.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Actions */}

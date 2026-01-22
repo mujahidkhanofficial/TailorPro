@@ -35,7 +35,11 @@
         "noCustomers": "ابھی تک کوئی گاہک نہیں",
         "deleteConfirm": "کیا آپ واقعی اس گاہک کو حذف کرنا چاہتے ہیں؟",
         "viewHistory": "آرڈر کی تاریخ دیکھیں",
-        "saveAndAddMeasurements": "محفوظ کریں اور پیمائش شامل کریں"
+        "viewHistory": "آرڈر کی تاریخ دیکھیں",
+        "saveAndAddMeasurements": "محفوظ کریں اور پیمائش شامل کریں",
+        "noCustomersFound": "کوئی گاہک نہیں ملا",
+        "addNewButton": "نیا گاہک شامل کریں",
+        "createWithName": "\"{{name}}\" بنائیں"
     },
     "orders": {
         "title": "آرڈرز",
@@ -51,7 +55,10 @@
         "statusInProgress": "جاری ہے",
         "statusReady": "تیار",
         "statusDelivered": "پہنچا دیا گیا",
-        "statusCompleted": "مکمل"
+        "statusDelivered": "پہنچا دیا گیا",
+        "statusCompleted": "مکمل",
+        "notesPlaceholder": "کوئی خاص ہدایات...",
+        "paymentPlaceholder": "5000 روپے"
     },
     "workers": {
         "title": "کاریگران",
@@ -70,7 +77,11 @@
             "cutter": "کٹر",
             "checker": "چیکر",
             "karigar": "کاریگر"
-        }
+        },
+        "assignment": "کاریگروں کی تعیناتی",
+        "cutter": "کٹر",
+        "checker": "چیکر",
+        "karigar": "کاریگر"
     },
     "measurements": {
         "title": "ناپ",
@@ -117,6 +128,7 @@
         "add": "شامل کریں",
         "search": "تلاش کریں",
         "loading": "لوڈ ہو رہا ہے...",
+        "select": "منتخب کریں...",
         "noResults": "کوئی نتائج نہیں ملے",
         "confirm": "تصدیق کریں",
         "yes": "ہاں",

@@ -40,10 +40,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 {/* Language Toggle */}
                 <button
                     onClick={handleLanguageToggle}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 border-b-4 border-gray-400 rounded-lg transition-all active:border-b-0 active:mt-1 active:mb-0 shadow-sm"
                 >
-                    <span className="text-lg">{language === 'en' ? '🇬🇧' : '🇵🇰'}</span>
-                    <span className="font-medium text-sm">
+                    <img
+                        src={language === 'en' ? '/icons/en.svg' : '/icons/ur.svg'}
+                        alt={language === 'en' ? 'English' : 'اردو'}
+                        className="w-6 h-6 rounded-sm"
+                    />
+                    <span className="font-medium text-sm text-gray-700">
                         {language === 'en' ? 'English' : 'اردو'}
                     </span>
                 </button>

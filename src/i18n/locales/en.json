@@ -35,7 +35,10 @@
         "noCustomers": "No customers yet",
         "deleteConfirm": "Are you sure you want to delete this customer?",
         "viewHistory": "View Order History",
-        "saveAndAddMeasurements": "Save & Add Measurements"
+        "saveAndAddMeasurements": "Save & Add Measurements",
+        "noCustomersFound": "No customers found",
+        "addNewButton": "Add New Customer",
+        "createWithName": "Create \"{{name}}\""
     },
     "orders": {
         "title": "Orders",
@@ -51,7 +54,9 @@
         "statusInProgress": "In Progress",
         "statusReady": "Ready",
         "statusDelivered": "Delivered",
-        "statusCompleted": "Completed"
+        "statusCompleted": "Completed",
+        "notesPlaceholder": "Any special instructions...",
+        "paymentPlaceholder": "Rs. 5000"
     },
     "workers": {
         "title": "Workers",
@@ -70,7 +75,11 @@
             "cutter": "Cutter",
             "checker": "Checker",
             "karigar": "Karigar"
-        }
+        },
+        "assignment": "Worker Assignment",
+        "cutter": "Cutter",
+        "checker": "Checker",
+        "karigar": "Karigar"
     },
     "measurements": {
         "title": "Measurements",
@@ -117,6 +126,7 @@
         "add": "Add",
         "search": "Search",
         "loading": "Loading...",
+        "select": "Select...",
         "noResults": "No results found",
         "confirm": "Confirm",
         "yes": "Yes",

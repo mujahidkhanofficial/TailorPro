@@ -1,20 +1,23 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { db, Customer, Order, CustomerMeasurement } from '@/db/database';
 import { formatDate, formatDaysRemaining } from '@/utils/formatters';
 import { orderStatusOptions } from '@/db/templates';
 import CustomerMeasurementForm from '@/components/forms/CustomerMeasurementForm';
 import MeasurementPrint from '@/components/forms/MeasurementPrint';
+import { ArrowLeft, Phone, MapPin } from 'lucide-react';
 
 export default function CustomerDetail() {
     const { id } = useParams<{ id: string }>();
+    const [searchParams] = useSearchParams();
     const { t, i18n } = useTranslation();
     const isUrdu = i18n.language === 'ur';
     const [customer, setCustomer] = useState<Customer | null>(null);
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'orders' | 'measurements'>('measurements');
+    const initialTab = searchParams.get('tab') === 'orders' ? 'orders' : 'measurements';
+    const [activeTab, setActiveTab] = useState<'orders' | 'measurements'>(initialTab);
     const [printData, setPrintData] = useState<CustomerMeasurement | null>(null);
 
     useEffect(() => {
@@ -54,8 +57,9 @@ export default function CustomerDetail() {
         return (
             <div className="text-center py-12">
                 <p className="text-gray-500">{t('common.noResults')}</p>
-                <Link to="/customers" className="btn btn-primary mt-4">
-                    ← {t('customers.title')}
+                <Link to="/customers" className="btn bg-gray-200 text-gray-700 border-b-4 border-gray-400 hover:bg-gray-300 active:border-b-0 active:mt-1 flex items-center gap-2">
+                    <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+                    {t('customers.title')}
                 </Link>
             </div>
         );
@@ -64,26 +68,40 @@ export default function CustomerDetail() {
     return (
         <div className="space-y-6">
             {/* Back Link */}
-            <Link to="/customers" className="text-primary-600 hover:underline">
-                ← {t('customers.title')}
+            <Link to="/customers" className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg border-b-4 border-gray-400 hover:bg-gray-300 active:border-b-0 active:mt-1 transition-all text-sm font-medium">
+                <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+                {t('customers.title')}
             </Link>
 
-            {/* Customer Info Card */}
-            <div className="card">
-                <div className="flex items-start gap-6">
-                    <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 text-2xl font-bold shrink-0">
-                        {customer.name.charAt(0).toUpperCase()}
+            {/* Customer Info Card - Dark Slate Theme */}
+            <div className="bg-slate-800 rounded-xl p-6 shadow-lg text-slate-200 border border-slate-700">
+                {/* Header with Name and ID */}
+                <div className="flex justify-between items-center pb-4 border-b border-slate-700 mb-4">
+                    <h1 className="text-2xl font-bold text-white">{customer.name}</h1>
+                    <div className="text-xs bg-slate-700 px-3 py-1.5 rounded text-blue-300 font-medium">
+                        #{customer.id}
                     </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">{customer.name}</h1>
-                        <p className="text-lg text-gray-600">{customer.phone}</p>
-                        {customer.address && (
-                            <p className="text-gray-400 mt-1">{customer.address}</p>
-                        )}
-                        <p className="text-sm text-gray-400 mt-2">
-                            Customer ID: <span className="font-mono font-bold">{customer.id}</span>
-                        </p>
+                </div>
+
+                {/* Info Section */}
+                <div className="space-y-3">
+                    {/* Phone */}
+                    <div className="flex items-center text-slate-300 gap-3">
+                        <span className="p-2 bg-slate-700 rounded-full shrink-0">
+                            <Phone className="w-4 h-4" />
+                        </span>
+                        <span className="text-lg">{customer.phone}</span>
                     </div>
+
+                    {/* Address */}
+                    {customer.address && (
+                        <div className="flex items-center text-slate-300 gap-3">
+                            <span className="p-2 bg-slate-700 rounded-full shrink-0">
+                                <MapPin className="w-4 h-4" />
+                            </span>
+                            <span className="text-lg">{customer.address}</span>
+                        </div>
+                    )}
                 </div>
             </div>
 

@@ -113,6 +113,10 @@ html[lang="ur"] [class*="text-"] {
     @apply bg-[#ef4444] text-white border-[#b91c1c] hover:bg-[#f87171] hover:border-[#ef4444] focus:ring-[#ef4444];
   }
 
+  .btn-success {
+    @apply bg-[#16a34a] text-white border-[#166534] hover:bg-[#22c55e] hover:border-[#15803d] focus:ring-[#16a34a];
+  }
+
   .card {
     @apply bg-white rounded-xl shadow-card border border-gray-200/60 p-6 hover:shadow-card-hover transition-shadow duration-300;
   }
@@ -120,4 +124,33 @@ html[lang="ur"] [class*="text-"] {
   .input {
     @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 bg-gray-50/30 focus:bg-white;
   }
+}
+
+/* Custom Scrollbar for Webkit (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  /* slate-300 */
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+  /* slate-400 */
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }

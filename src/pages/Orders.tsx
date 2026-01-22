@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useOrderStore } from '@/stores/orderStore';
-import { db, Customer, OrderStatus } from '@/db/database';
+import { db, Customer } from '@/db/database';
 import { orderStatusOptions } from '@/db/templates';
 import { formatDate, formatDaysRemaining } from '@/utils/formatters';
 import OrderFormModal from '@/components/forms/OrderFormModal';
-import { Plus, ShoppingBag, Search, Calendar, Phone, Trash2 } from 'lucide-react';
+import { Plus, ShoppingBag, Search, Calendar, Phone, Trash2, Wallet, Clock, CheckCircle, Truck, CheckSquare } from 'lucide-react';
 import PageTransition from '@/components/ui/PageTransition';
 import Skeleton from '@/components/ui/Skeleton';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
@@ -55,14 +55,7 @@ export default function Orders() {
         setCustomerMap(map);
     };
 
-    // Solid color mapping for active states
-    const statusConfig: Record<string, string> = {
-        new: 'bg-blue-500',
-        in_progress: 'bg-yellow-500',
-        ready: 'bg-green-500',
-        delivered: 'bg-gray-500',
-        completed: 'bg-purple-500',
-    };
+
 
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -96,38 +89,72 @@ export default function Orders() {
                 </button>
             </div>
 
-            {/* Status Filter */}
+            {/* Status Filter - With Icons & 3D Effect */}
             <div className="flex flex-wrap gap-2">
                 <button
                     onClick={() => setStatusFilter('all')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${statusFilter === 'all'
-                        ? 'bg-gray-800 text-white border-gray-800'
-                        : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'all'
+                        ? 'bg-gray-800 text-white border-gray-950'
+                        : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
                         }`}
                 >
+                    <ShoppingBag className="w-4 h-4" />
                     {t('common.all')}
                 </button>
-                {orderStatusOptions.map((option) => {
-                    const isActive = statusFilter === option.value;
-                    const solidColor = statusConfig[option.value] || 'bg-gray-500';
-
-                    return (
-                        <button
-                            key={option.value}
-                            onClick={() => setStatusFilter(option.value as OrderStatus)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${isActive
-                                ? `${solidColor} text-white border-transparent`
-                                : `bg-white text-gray-600 border-gray-200 hover:bg-gray-50`
-                                }`}
-                        >
-                            {t(option.label)}
-                        </button>
-                    );
-                })}
+                <button
+                    onClick={() => setStatusFilter('new')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'new'
+                        ? 'bg-blue-500 text-white border-blue-700'
+                        : 'bg-blue-100 text-blue-600 border-blue-300 hover:bg-blue-200'
+                        }`}
+                >
+                    <Plus className="w-4 h-4" />
+                    {t('orders.statusNew')}
+                </button>
+                <button
+                    onClick={() => setStatusFilter('in_progress')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'in_progress'
+                        ? 'bg-yellow-500 text-white border-yellow-700'
+                        : 'bg-yellow-100 text-yellow-600 border-yellow-300 hover:bg-yellow-200'
+                        }`}
+                >
+                    <Clock className="w-4 h-4" />
+                    {t('orders.statusInProgress')}
+                </button>
+                <button
+                    onClick={() => setStatusFilter('ready')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'ready'
+                        ? 'bg-green-500 text-white border-green-700'
+                        : 'bg-green-100 text-green-600 border-green-300 hover:bg-green-200'
+                        }`}
+                >
+                    <CheckCircle className="w-4 h-4" />
+                    {t('orders.statusReady')}
+                </button>
+                <button
+                    onClick={() => setStatusFilter('delivered')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'delivered'
+                        ? 'bg-gray-500 text-white border-gray-700'
+                        : 'bg-gray-200 text-gray-600 border-gray-400 hover:bg-gray-300'
+                        }`}
+                >
+                    <Truck className="w-4 h-4" />
+                    {t('orders.statusDelivered')}
+                </button>
+                <button
+                    onClick={() => setStatusFilter('completed')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'completed'
+                        ? 'bg-purple-500 text-white border-purple-700'
+                        : 'bg-purple-100 text-purple-600 border-purple-300 hover:bg-purple-200'
+                        }`}
+                >
+                    <CheckSquare className="w-4 h-4" />
+                    {t('orders.statusCompleted')}
+                </button>
             </div>
 
-            {/* Search - Grid wrapper to match other pages */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Search - Grid wrapper with same breakpoints as cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 <div className="flex rounded-xl overflow-hidden border border-gray-200 border-b-4 border-b-gray-300 bg-white shadow-sm">
                     <div className="bg-gray-800 w-12 flex items-center justify-center shrink-0 border-b-4 border-b-gray-950">
                         <Search className="w-5 h-5 text-white" />
@@ -168,7 +195,7 @@ export default function Orders() {
                     </button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {filteredOrders.map((order) => {
                         const customer = customerMap[order.customerId];
                         const statusOption = orderStatusOptions.find((s) => s.value === order.status);
@@ -204,27 +231,33 @@ export default function Orders() {
                                 </div>
 
                                 {/* Info */}
-                                <div className="space-y-2.5 mb-4 flex-1 text-sm">
+                                <div className="space-y-3 mb-4 flex-1 text-sm">
                                     {/* Phone */}
                                     {customer && (
-                                        <div className="flex items-center text-slate-300 gap-2">
-                                            <Phone className="w-3.5 h-3.5 text-slate-500" />
+                                        <div className="flex items-center text-slate-300 gap-3">
+                                            <span className="p-1.5 bg-slate-700 rounded-full">
+                                                <Phone className="w-3 h-3" />
+                                            </span>
                                             <span>{customer.phone}</span>
                                         </div>
                                     )}
 
                                     {/* Order Date */}
-                                    <div className="flex items-center text-slate-400 gap-2">
-                                        <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                                    <div className="flex items-center text-slate-300 gap-3">
+                                        <span className="p-1.5 bg-slate-700 rounded-full">
+                                            <Calendar className="w-3 h-3" />
+                                        </span>
                                         <span className="text-slate-500">{t('orders.orderDate')}:</span>
-                                        <span className="text-slate-300">{formatDate(order.createdAt)}</span>
+                                        <span>{formatDate(order.createdAt)}</span>
                                     </div>
 
                                     {/* Due Date */}
-                                    <div className="flex items-center text-slate-400 gap-2">
-                                        <ShoppingBag className="w-3.5 h-3.5 text-slate-500" />
+                                    <div className="flex items-center text-slate-300 gap-3">
+                                        <span className="p-1.5 bg-slate-700 rounded-full">
+                                            <ShoppingBag className="w-3 h-3" />
+                                        </span>
                                         <span className="text-slate-500">{t('orders.dueDate')}:</span>
-                                        <span className="text-slate-300">{formatDate(order.dueDate)}</span>
+                                        <span>{formatDate(order.dueDate)}</span>
                                         <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${daysInfo.color.includes('red') ? 'bg-red-500/20 text-red-300' : daysInfo.color.includes('yellow') ? 'bg-yellow-500/20 text-yellow-300' : 'bg-green-500/20 text-green-300'}`}>
                                             {daysInfo.text}
                                         </span>
@@ -232,7 +265,10 @@ export default function Orders() {
 
                                     {/* Advance Payment */}
                                     {order.advancePayment && (
-                                        <div className="flex items-center text-slate-400 gap-2">
+                                        <div className="flex items-center text-slate-300 gap-3">
+                                            <span className="p-1.5 bg-slate-700 rounded-full">
+                                                <Wallet className="w-3 h-3" />
+                                            </span>
                                             <span className="text-slate-500">{t('orders.advancePayment')}:</span>
                                             <span className="text-emerald-400 font-semibold">{order.advancePayment}</span>
                                         </div>

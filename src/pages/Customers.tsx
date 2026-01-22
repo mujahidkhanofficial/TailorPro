@@ -88,20 +88,7 @@ export default function Customers() {
                 </button>
             </div>
 
-            {/* Search */}
-            <div className="relative">
-                <input
-                    id="customer-search"
-                    type="text"
-                    placeholder={t('customers.search')}
-                    value={localSearch}
-                    onChange={(e) => setLocalSearch(e.target.value)}
-                    className="input ps-10"
-                />
-                <span className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400">
-                    <Search className="w-5 h-5" />
-                </span>
-            </div>
+
 
             {/* Customer List */}
             {loading ? (
@@ -126,82 +113,102 @@ export default function Customers() {
                     </button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {customers.map((customer) => (
-                        <div key={customer.id} className="bg-slate-800 rounded-xl p-6 shadow-lg text-slate-200 border border-slate-700 flex flex-col justify-between h-full group">
-                            {/* Header */}
-                            <div className="flex justify-between items-center pb-4 border-b border-slate-700 mb-4">
-                                <Link to={`/customers/${customer.id}`} className="font-bold text-lg text-white hover:text-blue-300 transition-colors truncate pr-2">
-                                    {customer.name}
-                                </Link>
-                                <div className="text-xs bg-slate-700 px-2 py-1 rounded text-blue-300 shrink-0">
-                                    #{customer.id}
-                                </div>
+                <>
+                    {/* Search Box - Same grid as cards for matching width */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
+                        <div className="flex rounded-xl overflow-hidden border border-gray-200 border-b-4 border-b-gray-300 bg-white shadow-sm">
+                            <div className="bg-gray-800 w-12 flex items-center justify-center shrink-0 border-b-4 border-b-gray-950">
+                                <Search className="w-5 h-5 text-white" />
                             </div>
-
-                            {/* Info */}
-                            <div className="space-y-3 mb-6 flex-1">
-                                <div className="flex items-center text-sm text-slate-300 gap-3">
-                                    <span className="p-1.5 bg-slate-700 rounded-full">
-                                        <Phone className="w-3 h-3" />
-                                    </span>
-                                    {customer.phone}
-                                </div>
-                                {customer.address ? (
-                                    <div className="flex items-start text-sm text-slate-300 gap-3">
-                                        <span className="p-1.5 bg-slate-700 rounded-full mt-0.5">
-                                            <MapPin className="w-3 h-3" />
-                                        </span>
-                                        <span className="line-clamp-2">{customer.address}</span>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center text-sm text-slate-500 gap-3 italic">
-                                        <span className="p-1.5 bg-slate-700 rounded-full">
-                                            <MapPin className="w-3 h-3" />
-                                        </span>
-                                        {t('customers.address')}...
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Footer Actions */}
-                            <div className="flex justify-between items-center text-slate-400">
-                                <div className="flex gap-2">
-                                    <Link
-                                        to={`/customers/${customer.id}`}
-                                        className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-slate-700 rounded transition-colors"
-                                        title={t('measurements.title')}
-                                    >
-                                        <Ruler className="w-4 h-4" />
-                                    </Link>
-                                    <Link
-                                        to={`/customers/${customer.id}`}
-                                        className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded transition-colors"
-                                        title={t('customers.viewHistory')}
-                                    >
-                                        <History className="w-4 h-4" />
-                                    </Link>
-                                </div>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => handleEdit(customer)}
-                                        className="p-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-slate-700 rounded transition-colors"
-                                        title={t('common.edit')}
-                                    >
-                                        <Edit2 className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(customer.id!)}
-                                        className="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-slate-700 rounded transition-colors"
-                                        title={t('common.delete')}
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
+                            <input
+                                id="customer-search"
+                                type="text"
+                                placeholder={t('customers.search')}
+                                value={localSearch}
+                                onChange={(e) => setLocalSearch(e.target.value)}
+                                className="flex-1 px-4 py-3 bg-transparent outline-none border-0 ring-0 focus:outline-none focus:ring-0 focus:border-0 text-gray-900 placeholder:text-gray-400"
+                            />
                         </div>
-                    ))}
-                </div>
+                    </div>
+
+                    {/* Customer Cards Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {customers.map((customer) => (
+                            <div key={customer.id} className="bg-slate-800 rounded-xl p-6 shadow-lg text-slate-200 border border-slate-700 flex flex-col justify-between h-full group">
+                                {/* Header */}
+                                <div className="flex justify-between items-center pb-4 border-b border-slate-700 mb-4">
+                                    <Link to={`/customers/${customer.id}`} className="font-bold text-lg text-white hover:text-blue-300 transition-colors truncate pr-2">
+                                        {customer.name}
+                                    </Link>
+                                    <div className="text-xs bg-slate-700 px-2 py-1 rounded text-blue-300 shrink-0">
+                                        #{customer.id}
+                                    </div>
+                                </div>
+
+                                {/* Info */}
+                                <div className="space-y-3 mb-6 flex-1">
+                                    <div className="flex items-center text-sm text-slate-300 gap-3">
+                                        <span className="p-1.5 bg-slate-700 rounded-full">
+                                            <Phone className="w-3 h-3" />
+                                        </span>
+                                        {customer.phone}
+                                    </div>
+                                    {customer.address ? (
+                                        <div className="flex items-start text-sm text-slate-300 gap-3">
+                                            <span className="p-1.5 bg-slate-700 rounded-full mt-0.5">
+                                                <MapPin className="w-3 h-3" />
+                                            </span>
+                                            <span className="line-clamp-2">{customer.address}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center text-sm text-slate-500 gap-3 italic">
+                                            <span className="p-1.5 bg-slate-700 rounded-full">
+                                                <MapPin className="w-3 h-3" />
+                                            </span>
+                                            {t('customers.address')}...
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Footer Actions */}
+                                <div className="flex justify-between items-center text-slate-400">
+                                    <div className="flex gap-2">
+                                        <Link
+                                            to={`/customers/${customer.id}?tab=measurements`}
+                                            className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-slate-700 rounded transition-colors"
+                                            title={t('measurements.title')}
+                                        >
+                                            <Ruler className="w-4 h-4" />
+                                        </Link>
+                                        <Link
+                                            to={`/customers/${customer.id}?tab=orders`}
+                                            className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded transition-colors"
+                                            title={t('customers.viewHistory')}
+                                        >
+                                            <History className="w-4 h-4" />
+                                        </Link>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleEdit(customer)}
+                                            className="p-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-slate-700 rounded transition-colors"
+                                            title={t('common.edit')}
+                                        >
+                                            <Edit2 className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(customer.id!)}
+                                            className="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-slate-700 rounded transition-colors"
+                                            title={t('common.delete')}
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </>
             )}
 
             {/* Modal */}

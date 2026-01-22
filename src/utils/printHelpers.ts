@@ -1,7 +1,12 @@
 import { Customer, CustomerMeasurement, Settings } from '@/db/database';
 import { measurementFields, designOptions, collarNokOptions, banPattiOptions, cuffOptions, frontPocketOptions, sidePocketOptions, frontStripOptions, hemStyleOptions, shalwarFarmaishOptions } from '@/db/templates';
 
-export const generateMeasurementSlipHTML = (customer: Customer, measurement: CustomerMeasurement, settings?: Settings): string => {
+export const generateMeasurementSlipHTML = (
+    customer: Customer,
+    measurement: CustomerMeasurement,
+    settings?: Settings,
+    workerNames?: { cutter?: string; checker?: string; karigar?: string }
+): string => {
 
     const shopName = settings?.shopName || 'M.R.S ٹیلرز اینڈ فیبرکس';
     const address = settings?.address || 'گل پلازہ روڈ اپوزٹ ٹاؤن شیل مارکیٹ تارو جب';
@@ -35,22 +40,15 @@ export const generateMeasurementSlipHTML = (customer: Customer, measurement: Cus
     if (measurement.fields['aasan']) leftTableRows += generateRow('آسن', measurement.fields['aasan']);
     if (measurement.fields['bazuCenter']) leftTableRows += generateRow('بازو سینٹر', measurement.fields['bazuCenter']);
 
-
     // 2. Generate Right Table Rows (Measurements)
     let rightTableRows = measurementFields
         .map(field => generateRow(field.labelUr, measurement.fields[field.key] || ''))
         .join('');
 
-    // 3. Generate Farmaish List
-    const selectedDesignOptions = designOptions
-        .filter(opt => measurement.designOptions[opt.key])
-        .map(opt => `
-            <div style="display: flex; align-items: center; gap: 5px; margin-right: 10px; margin-bottom: 4px;">
-                <div style="width: 12px; height: 12px; background: black; border: 1px solid black;"></div>
-                <span>${opt.labelUr}</span>
-            </div>
-        `)
-        .join('');
+    // 7. Workers info
+    const cutterName = workerNames?.cutter || '________________';
+    const checkerName = workerNames?.checker || '________________';
+    const karigarName = workerNames?.karigar || '________________';
 
     return `
 <!DOCTYPE html>
@@ -194,15 +192,16 @@ export const generateMeasurementSlipHTML = (customer: Customer, measurement: Cus
         .label-cell {
             text-align: right;
             border-right: 1px solid #ddd;
-            width: 55%;
+            width: 35%;
             color: #333;
             font-weight: 500;
             font-size: 13px;
+            white-space: nowrap;
         }
 
         .value-cell {
-            text-align: center;
-            width: 45%;
+            text-align: right;
+            width: 65%;
             font-weight: 700;
             font-size: 15px;
             color: #000;
@@ -228,25 +227,11 @@ export const generateMeasurementSlipHTML = (customer: Customer, measurement: Cus
             margin-bottom: 5px;
         }
         
-        .farmaish-grid {
-            display: flex;
-            flex-wrap: wrap;
+        .farmaish-list {
             font-family: 'Noto Nastaliq Urdu', serif !important;
-            font-size: 13px;
-            gap: 4px 12px;
-        }
-        
-        .farmaish-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .box {
-            width: 12px;
-            height: 12px;
-            background: #222;
-            border: 1px solid #222;
+            font-size: 14px;
+            font-weight: 600;
+            color: #000;
         }
 
         .no-farmaish {
@@ -275,9 +260,9 @@ export const generateMeasurementSlipHTML = (customer: Customer, measurement: Cus
     </div>
     
     <div class="info-row" style="font-weight: 500;">
-        <div style="flex: 1; text-align: right;">کٹر: ________________</div>
-        <div style="flex: 1; text-align: center;">چیکر: ________________</div>
-        <div style="flex: 1; text-align: left;">کاریگر: ________________</div>
+        <div style="flex: 1; text-align: right;">کٹر: ${cutterName}</div>
+        <div style="flex: 1; text-align: center;">چیکر: ${checkerName}</div>
+        <div style="flex: 1; text-align: left;">کاریگر: ${karigarName}</div>
     </div>
 
     <!-- Main Tables -->
@@ -302,17 +287,10 @@ export const generateMeasurementSlipHTML = (customer: Customer, measurement: Cus
     </div>
 
     <!-- Farmaish Section -->
-    ${selectedDesignOptions ? `
+    ${designOptions.filter(opt => measurement.designOptions[opt.key]).length > 0 ? `
         <div class="farmaish-container">
-            <p class="farmaish-title">فرمائش:</p>
-            <div class="farmaish-grid">
-                ${designOptions.filter(opt => measurement.designOptions[opt.key]).map(opt => `
-                    <div class="farmaish-item">
-                        <div class="box"></div>
-                        <span>${opt.labelUr}</span>
-                    </div>
-                `).join('')}
-            </div>
+            <span class="farmaish-title">فرمائش: </span>
+            <span class="farmaish-list">${designOptions.filter(opt => measurement.designOptions[opt.key]).map(opt => opt.labelUr).join('، ')}</span>
         </div>
     ` : `
         <div class="farmaish-container">

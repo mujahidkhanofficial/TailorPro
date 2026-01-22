@@ -5,7 +5,7 @@ export const measurementFields = [
     { key: 'length', labelEn: 'Length', labelUr: 'لمبائی' },
     { key: 'sleeve', labelEn: 'Sleeve', labelUr: 'آستین' },
     { key: 'chest', labelEn: 'Chest', labelUr: 'چھاتی' },
-    { key: 'tera', labelEn: 'Tera (Collar)', labelUr: 'تیرا' },
+    { key: 'tera', labelEn: 'Tera', labelUr: 'تیرا' },
     { key: 'kalar', labelEn: 'Collar', labelUr: 'کالر' },
     { key: 'daaman', labelEn: 'Hem Width', labelUr: 'دامن' },
     { key: 'shalwar', labelEn: 'Shalwar Length', labelUr: 'شلوار' },
@@ -47,11 +47,11 @@ export const cuffOptions = [
 // Front Pocket (سامنے جیب) dropdown options
 export const frontPocketOptions = [
     { value: '', labelEn: 'Select...', labelUr: 'منتخب کریں...' },
-    { value: '3x3.5', labelEn: '3 x 3.5', labelUr: 'تین x ساڑھے تین' },
-    { value: '4x4.5', labelEn: '4 x 4.5', labelUr: 'چار x ساڑھے چار' },
-    { value: '4.75x5.25', labelEn: '4.75 x 5.25', labelUr: 'پونے پانچ x سوا پانچ' },
-    { value: '5x5.5', labelEn: '5 x 5.5', labelUr: 'پانچ x ساڑھے پانچ' },
-    { value: '5.25x5.75', labelEn: '5.25 x 5.75', labelUr: 'سوا پانچ x پونے چھ' },
+    { value: '3x3.5', labelEn: '3 × 3.5', labelUr: 'تین × ساڑھے تین' },
+    { value: '4x4.5', labelEn: '4 × 4.5', labelUr: 'چار × ساڑھے چار' },
+    { value: '4.75x5.25', labelEn: '4.75 × 5.25', labelUr: 'پونے پانچ × سوا پانچ' },
+    { value: '5x5.5', labelEn: '5 × 5.5', labelUr: 'پانچ × ساڑھے پانچ' },
+    { value: '5.25x5.75', labelEn: '5.25 × 5.75', labelUr: 'سوا پانچ × پونے چھ' },
 ];
 
 // Side Pocket (سائیڈ جیب) dropdown options

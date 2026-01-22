@@ -233,7 +233,7 @@ export default function CustomerFormModal({ customer, onClose, onSuccess, onSave
                                     type="button"
                                     onClick={() => handleSubmit(null, true)}
                                     disabled={isSubmitting}
-                                    className="btn bg-gray-900 text-white hover:bg-gray-800 flex items-center justify-center gap-2"
+                                    className="btn btn-success flex items-center justify-center gap-2"
                                 >
                                     {isSubmitting ? (
                                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
