@@ -56,7 +56,7 @@
         "statusDelivered": "Delivered",
         "statusCompleted": "Completed",
         "notesPlaceholder": "Any special instructions...",
-        "paymentPlaceholder": "Rs. 5000"
+        "paymentPlaceholder": "Rs."
     },
     "workers": {
         "title": "Workers",

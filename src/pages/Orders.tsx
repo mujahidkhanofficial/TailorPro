@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useOrderStore } from '@/stores/orderStore';
 import { db, Customer } from '@/db/database';
 import { orderStatusOptions } from '@/db/templates';
 import { formatDate, formatDaysRemaining } from '@/utils/formatters';
-import OrderFormModal from '@/components/forms/OrderFormModal';
 import { Plus, ShoppingBag, Search, Calendar, Phone, Trash2, Wallet, Clock, CheckCircle, Truck, CheckSquare } from 'lucide-react';
 import PageTransition from '@/components/ui/PageTransition';
 import Skeleton from '@/components/ui/Skeleton';
@@ -14,6 +13,7 @@ import toast from 'react-hot-toast';
 
 export default function Orders() {
     const { t, i18n } = useTranslation();
+    const navigate = useNavigate();
     const isUrdu = i18n.language === 'ur';
     const {
         orders,
@@ -29,8 +29,6 @@ export default function Orders() {
     // or just rely on the store's data if it's already loaded.
     // For now, let's load customers to ensure we have names.
     const [customerMap, setCustomerMap] = useState<Record<number, Customer>>({});
-
-    const [isModalOpen, setIsModalOpen] = useState(false);
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
     useEffect(() => {
@@ -40,7 +38,7 @@ export default function Orders() {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.ctrlKey && e.key === 'n') {
                 e.preventDefault();
-                setIsModalOpen(true);
+                navigate('/orders/create');
             }
         };
 
@@ -83,10 +81,10 @@ export default function Orders() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-2xl font-bold text-gray-900">{t('orders.title')}</h1>
-                <button onClick={() => setIsModalOpen(true)} className="btn btn-primary flex items-center gap-2">
+                <Link to="/orders/create" className="btn btn-primary flex items-center gap-2">
                     <Plus className="w-5 h-5" />
                     {t('orders.addNew')}
-                </button>
+                </Link>
             </div>
 
             {/* Status Filter - With Icons & 3D Effect */}
@@ -189,10 +187,10 @@ export default function Orders() {
                 <div className="text-center py-12 card flex flex-col items-center">
                     <div className="transform scale-150 mb-4 opacity-50"><ShoppingBag className="w-24 h-24 text-gray-200" /></div>
                     <p className="text-gray-500 text-lg">{searchQuery ? t('common.noResults') : t('orders.noOrders')}</p>
-                    <button onClick={() => setIsModalOpen(true)} className="btn btn-primary mt-4 flex items-center gap-2">
+                    <Link to="/orders/create" className="btn btn-primary mt-4 flex items-center gap-2">
                         <Plus className="w-5 h-5" />
                         {t('orders.addNew')}
-                    </button>
+                    </Link>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -275,21 +273,34 @@ export default function Orders() {
                                     )}
                                 </div>
 
-                                {/* Footer - Status */}
                                 <div className="flex justify-between items-center pt-3 border-t border-slate-700">
                                     <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${darkStatusColors[order.status] || 'bg-slate-600 text-slate-300'}`}>
                                         {t(statusOption?.label || '')}
                                     </span>
+
+                                    <button
+                                        onClick={(e) => {
+                                            e.preventDefault(); // Prevent navigation
+                                            setDeleteId(order.id!);
+                                        }}
+                                        className="text-slate-500 hover:text-red-400 p-1 rounded-md hover:bg-slate-700 transition-colors"
+                                        title={t('common.delete')}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
                                 </div>
                             </Link>
                         );
                     })}
                 </div>
             )}
-
-            {isModalOpen && (
-                <OrderFormModal onClose={() => setIsModalOpen(false)} />
-            )}
+            <ConfirmationModal
+                isOpen={!!deleteId}
+                onClose={() => setDeleteId(null)}
+                onConfirm={confirmDelete}
+                title={t('orders.deleteTitle')}
+                message={t('orders.deleteConfirm')}
+            />
         </PageTransition>
     );
 }

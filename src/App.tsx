@@ -7,6 +7,7 @@ import Dashboard from '@/pages/Dashboard';
 import Customers from '@/pages/Customers';
 import CustomerDetail from '@/pages/CustomerDetail';
 import Orders from '@/pages/Orders';
+import CreateOrder from '@/pages/CreateOrder';
 import OrderDetail from '@/pages/OrderDetail';
 import Workers from '@/pages/Workers';
 import Backup from '@/pages/Backup';
@@ -33,10 +34,10 @@ function App() {
                     <Route path="/customers" element={<Customers />} />
                     <Route path="/customers/:id" element={<CustomerDetail />} />
                     <Route path="/orders" element={<Orders />} />
+                    <Route path="/orders/create" element={<CreateOrder />} />
                     <Route path="/orders/:id" element={<OrderDetail />} />
                     <Route path="/workers" element={<Workers />} />
                     <Route path="/backup" element={<Backup />} />
-
                     <Route path="/settings" element={<Settings />} />
                 </Routes>
             </AppLayout>

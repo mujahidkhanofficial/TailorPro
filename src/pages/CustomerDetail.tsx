@@ -143,7 +143,7 @@ export default function CustomerDetail() {
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-lg font-semibold">{t('customers.viewHistory')}</h2>
                         <Link
-                            to={`/orders?customer=${customer.id}`}
+                            to={`/orders/create?customerId=${customer.id}`}
                             className="btn btn-primary text-sm"
                         >
                             + {t('orders.addNew')}

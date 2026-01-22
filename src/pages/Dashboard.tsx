@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCustomerStore } from '@/stores/customerStore';
 import { useOrderStore } from '@/stores/orderStore';
 import {
@@ -16,12 +16,12 @@ import { formatDaysRemaining } from '@/utils/formatters';
 import { ReactNode } from 'react';
 
 import PageTransition from '@/components/ui/PageTransition';
-import OrderFormModal from '@/components/forms/OrderFormModal';
 import { useUIStore } from '@/stores/uiStore';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 
 export default function Dashboard() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const { customers, loadCustomers } = useCustomerStore();
     const pendingOrders = useOrderStore((state) => state.pendingOrders);
     const dueTodayOrders = useOrderStore((state) => state.dueTodayOrders);
@@ -29,8 +29,6 @@ export default function Dashboard() {
     // @ts-ignore
     const stats = useOrderStore((state) => state.stats);
     const { onboardingCompleted } = useUIStore();
-
-    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         loadCustomers();
@@ -41,7 +39,7 @@ export default function Dashboard() {
             // New Order: Ctrl + N
             if (e.ctrlKey && e.key === 'n') {
                 e.preventDefault();
-                setIsModalOpen(true);
+                navigate('/orders/create');
             }
         };
 
@@ -98,7 +96,7 @@ export default function Dashboard() {
                             <div className="flex-1 flex flex-col items-center justify-center py-12 bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-200">
                                 <p className="text-gray-500 font-medium mb-4">{t('dashboard.noOrdersDueToday')}</p>
                                 <button
-                                    onClick={() => setIsModalOpen(true)}
+                                    onClick={() => navigate('/orders/create')}
                                     className="btn btn-primary inline-flex items-center gap-2"
                                 >
                                     <Plus className="w-4 h-4" />
@@ -186,12 +184,10 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {isModalOpen && <OrderFormModal onClose={() => setIsModalOpen(false)} />}
-
             {!onboardingCompleted && (
                 <OnboardingWizard
                     onComplete={() => { }}
-                    onOpenNewOrder={() => setIsModalOpen(true)}
+                    onOpenNewOrder={() => navigate('/orders/create')}
                 />
             )}
         </PageTransition>

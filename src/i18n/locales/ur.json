@@ -35,7 +35,6 @@
         "noCustomers": "ابھی تک کوئی گاہک نہیں",
         "deleteConfirm": "کیا آپ واقعی اس گاہک کو حذف کرنا چاہتے ہیں؟",
         "viewHistory": "آرڈر کی تاریخ دیکھیں",
-        "viewHistory": "آرڈر کی تاریخ دیکھیں",
         "saveAndAddMeasurements": "محفوظ کریں اور پیمائش شامل کریں",
         "noCustomersFound": "کوئی گاہک نہیں ملا",
         "addNewButton": "نیا گاہک شامل کریں",
@@ -47,7 +46,7 @@
         "selectCustomer": "گاہک منتخب کریں",
         "orderDate": "تاریخِ حکم",
         "dueDate": "تاریخِ ادائیگی",
-        "advancePayment": "پیشگی ادائیگی",
+        "advancePayment": "پیشگی رقم",
         "deliveryNotes": "ترسیل نوٹس",
         "status": "حیثیت",
         "noOrders": "ابھی تک کوئی آرڈر نہیں",
@@ -55,10 +54,9 @@
         "statusInProgress": "جاری ہے",
         "statusReady": "تیار",
         "statusDelivered": "پہنچا دیا گیا",
-        "statusDelivered": "پہنچا دیا گیا",
         "statusCompleted": "مکمل",
         "notesPlaceholder": "کوئی خاص ہدایات...",
-        "paymentPlaceholder": "5000 روپے"
+        "paymentPlaceholder": "روپے"
     },
     "workers": {
         "title": "کاریگران",
