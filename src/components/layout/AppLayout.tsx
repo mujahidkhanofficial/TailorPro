@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
-import { Toaster } from 'react-hot-toast';
+
 
 import { ReactNode } from 'react';
 
@@ -16,9 +16,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
     return (
         <div className="flex h-screen bg-background overflow-hidden font-sans text-gray-900" dir="auto">
-            <Toaster position="top-right" reverseOrder={false} />
 
-            {/* Sidebar */}
             <Sidebar
                 isOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}

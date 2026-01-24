@@ -9,7 +9,8 @@
         "orders": "Orders",
         "workers": "Workers",
         "backup": "Backup",
-        "settings": "Settings"
+        "settings": "Settings",
+        "logout": "Logout"
     },
     "dashboard": {
         "title": "Dashboard",
@@ -112,7 +113,12 @@
         "importSuccess": "Backup restored successfully!",
         "importError": "Import failed. Please check the file.",
         "exportError": "Export failed. Please try again.",
-        "warning": "Importing will merge with existing data"
+        "warning": "Importing will merge with existing data",
+        "dangerZone": "Danger Zone",
+        "clearData": "Clear All Data (Factory Reset)",
+        "clearConfirmTitle": "Factory Reset",
+        "clearConfirmMessage": "Are you sure you want to delete ALL data? This cannot be undone.",
+        "clearSuccess": "Database cleared successfully"
     },
     "settings": {
         "title": "Settings",
@@ -138,6 +144,8 @@
         "change": "Change",
         "confirmDelete": "Are you sure you want to delete this?",
         "deleteSuccess": "Deleted successfully",
+        "logoutTitle": "Logout",
+        "logoutConfirm": "Are you sure you want to logout?",
         "updateSuccess": "Updated successfully",
         "addSuccess": "Added successfully",
         "saveAndPrint": "Save & Print",

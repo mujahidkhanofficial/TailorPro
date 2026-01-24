@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useUIStore } from '@/stores/uiStore';
 import { useState, useEffect } from 'react';
-import { Scissors, Save, Building2, Phone, MapPin, Printer } from 'lucide-react';
+import { Scissors, Save, Building2, Phone, MapPin, Printer, Lock } from 'lucide-react';
 import { db, Settings as ShopSettings } from '@/db/database';
 import toast from 'react-hot-toast';
 
@@ -14,7 +14,10 @@ export default function Settings() {
     const [availablePrinters, setAvailablePrinters] = useState<any[]>([]);
     const isUrdu = i18n.language === 'ur';
 
-    // Shop Settings State
+    // Password Change State
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [settings, setSettings] = useState<ShopSettings>({
         shopName: 'M.R.S ٹیلرز اینڈ فیبرکس',
         address: 'گل پلازہ روڈ اپوزٹ ٹاؤن شیل مارکیٹ تارو جب',
@@ -31,8 +34,9 @@ export default function Settings() {
         }
 
         // Load Shop Settings
+        // Load Shop Settings
         const loadSettings = async () => {
-            const savedSettings = await db.settings.get(1);
+            const savedSettings = await db.settings.toCollection().first();
             if (savedSettings) {
                 setSettings(savedSettings);
             }
@@ -47,11 +51,71 @@ export default function Settings() {
 
     const handleSaveSettings = async () => {
         try {
-            await db.settings.put({ ...settings, id: 1, updatedAt: new Date() });
+            const existing = await db.settings.toCollection().first();
+            const id = existing?.id || 1;
+            // Ensure we don't overwrite password with empty/stale state if we have it in DB
+            // But if settings state has a password (loaded or updated), use it.
+            // Best safety: Merge existing password if current settings state doesn't have one? 
+            // Actually, since we will fix handleChangePassword to update state, settings.password should be correct.
+            // But let's be safe: preserve existing password if not explicitly changing it via this form? 
+            // This form doesn't have password input. So we should use existing.password from DB unless settings already has it.
+
+            const passwordToSave = settings.password || existing?.password;
+            const finalSettings = { ...settings, id, password: passwordToSave, updatedAt: new Date() };
+
+            await db.settings.put(finalSettings);
+            // Update local state to match full object
+            setSettings(finalSettings);
             toast.success('Settings saved successfully');
         } catch (error) {
             console.error(error);
             toast.error('Failed to save settings');
+        }
+    };
+
+    const handleChangePassword = async () => {
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            toast.error(isUrdu ? 'تمام خانے پر کریں' : 'Please fill all fields');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            toast.error(isUrdu ? 'نئے پاس ورڈ میچ نہیں کر رہے' : 'New passwords do not match');
+            return;
+        }
+
+        try {
+            const savedSettings = await db.settings.toCollection().first();
+            const actualCurrentPassword = savedSettings?.password || 'admin123';
+
+            if (currentPassword !== actualCurrentPassword) {
+                toast.error(isUrdu ? 'موجودہ پاس ورڈ غلط ہے' : 'Incorrect current password');
+                return;
+            }
+
+            // Create new settings object if none exists, preserving other fields
+            const id = savedSettings?.id || 1;
+            const newSettings: ShopSettings = {
+                ...(savedSettings || settings), // Use saved or local state default
+                id,
+                password: newPassword,
+                updatedAt: new Date()
+            };
+
+            await db.settings.put(newSettings);
+
+            // CRITICAL: Update local state so subsequent saves don't revert password
+            setSettings(newSettings);
+
+            toast.success(isUrdu ? 'پاس ورڈ تبدیل کر دیا گیا' : 'Password changed successfully');
+
+            // Clear fields
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+        } catch (error) {
+            console.error('Password change error:', error);
+            toast.error('Failed to change password');
         }
     };
 
@@ -208,6 +272,56 @@ export default function Settings() {
                     </div>
                 </div>
             </div >
+            {/* Security Settings */}
+            <div className="card">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <Lock className="w-5 h-5" />
+                        {isUrdu ? 'سیکیورٹی سیٹنگز' : 'Security Settings'}
+                    </h2>
+                    <button
+                        onClick={handleChangePassword}
+                        className="btn btn-primary flex items-center gap-2 text-sm py-1.5"
+                    >
+                        <Save className="w-4 h-4" />
+                        {isUrdu ? 'پاس ورڈ تبدیل کریں' : 'Change Password'}
+                    </button>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                    <div>
+                        <label className="label">{isUrdu ? 'موجودہ پاس ورڈ' : 'Current Password'}</label>
+                        <input
+                            type="password"
+                            className="input"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            placeholder="••••••••"
+                        />
+                    </div>
+                    <div>
+                        <label className="label">{isUrdu ? 'نیا پاس ورڈ' : 'New Password'}</label>
+                        <input
+                            type="password"
+                            className="input"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="••••••••"
+                        />
+                    </div>
+                    <div>
+                        <label className="label">{isUrdu ? 'نئے پاس ورڈ کی تصدیق' : 'Confirm New Password'}</label>
+                        <input
+                            type="password"
+                            className="input"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="••••••••"
+                        />
+                    </div>
+                </div>
+            </div>
+
         </PageTransition >
     );
 }

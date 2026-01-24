@@ -62,6 +62,7 @@ export interface Settings {
     phone1: string;
     phone2: string;
     defaultPrinter?: string;
+    password?: string; // For admin login
     updatedAt: Date;
 }
 // ... (skip lines)

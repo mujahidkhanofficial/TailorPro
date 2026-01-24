@@ -1,14 +1,17 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { db, Customer, Order, CustomerMeasurement } from '@/db/database';
 import PageTransition from '@/components/ui/PageTransition';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import { Upload, AlertTriangle, Download, FileSpreadsheet } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Backup() {
     const { t, i18n } = useTranslation();
-    const isUrdu = i18n.language === 'ur';
+
+
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isClearModalOpen, setIsClearModalOpen] = useState(false);
 
     const handleImportBackup = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -240,16 +243,13 @@ export default function Backup() {
             toast.error(t('backup.importError') || 'Import failed');
         }
     };
-    const handleClearDatabase = async () => {
-        if (!confirm(isUrdu ? 'کیا آپ واقعی تمام ڈیٹا حذف کرنا چاہتے ہیں؟ یہ عمل ناقابل واپسی ہے!' : 'Are you sure you want to delete ALL data? This cannot be undone!')) {
-            return;
-        }
 
-        // Double confirmation
-        if (!confirm(isUrdu ? 'براہ کرم دوبارہ تصدیق کریں۔ سارا ڈیٹا ضائع ہو جائے گا۔' : 'Please confirm again. All data will be lost.')) {
-            return;
-        }
 
+    const handleClearDatabase = () => {
+        setIsClearModalOpen(true);
+    };
+
+    const performClearDatabase = async () => {
         try {
             await db.transaction('rw', [db.customers, db.orders, db.measurements, db.customerMeasurements, db.settings, db.workers], async () => {
                 await db.customers.clear();
@@ -261,6 +261,7 @@ export default function Backup() {
             });
 
             toast.success(t('backup.clearSuccess') || 'Database cleared successfully');
+            setIsClearModalOpen(false);
         } catch (error) {
             console.error('Clear failed:', error);
             toast.error('Failed to clear database');
@@ -319,6 +320,17 @@ export default function Backup() {
                 onChange={handleImportBackup}
                 accept=".json"
                 className="hidden"
+            />
+
+            <ConfirmationModal
+                isOpen={isClearModalOpen}
+                onClose={() => setIsClearModalOpen(false)}
+                onConfirm={performClearDatabase}
+                title={t('backup.clearConfirmTitle')}
+                message={t('backup.clearConfirmMessage')}
+                confirmText={t('common.delete')}
+                isDestructive={true}
+                requirePassword={true}
             />
         </PageTransition>
     );

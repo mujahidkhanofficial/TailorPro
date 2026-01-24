@@ -1,8 +1,10 @@
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useUIStore } from '@/stores/uiStore';
-import { LayoutDashboard, Users, ShoppingBag, Cloud, Settings, Scissors, HardHat } from 'lucide-react';
-import { ReactNode } from 'react';
+import { useAuthStore } from '@/stores/authStore';
+import { LayoutDashboard, Users, ShoppingBag, Cloud, Settings, Scissors, HardHat, LogOut } from 'lucide-react';
+import { ReactNode, useState } from 'react';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 
 interface NavItem {
     path: string;
@@ -26,8 +28,16 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isUrdu = i18n.language === 'ur';
     const { sidebarCollapsed } = useUIStore();
+    const logout = useAuthStore(state => state.logout);
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+    const handleLogout = () => {
+        logout();
+        setIsLogoutModalOpen(false);
+    };
 
     return (
         <>
@@ -79,6 +89,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     </ul>
                 </nav>
 
+                {/* Logout Button */}
+                <div className="p-3 border-t border-gray-800/50">
+                    <button
+                        onClick={() => setIsLogoutModalOpen(true)}
+                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden text-red-400 hover:bg-red-500/10 hover:text-red-300`}
+                    >
+                        <span className={`transform transition-transform duration-200 ${!sidebarCollapsed && 'group-hover:scale-110'}`}>
+                            <LogOut size={20} />
+                        </span>
+                        {!sidebarCollapsed && (
+                            <span className="font-medium tracking-wide text-sm">{t('nav.logout') || "Logout"}</span>
+                        )}
+                    </button>
+                </div>
+
                 {/* Footer */}
                 {!sidebarCollapsed && (
                     <div className="p-4 border-t border-gray-800/50 text-center bg-gray-900/50">
@@ -86,14 +111,26 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <p className="text-xs text-gray-600 mt-1">Made for Pakistan 🇵🇰</p>
                     </div>
                 )}
-            </aside>
+            </aside >
             {/* Overlay for mobile */}
-            {isOpen && (
-                <div
-                    className="fixed inset-0 bg-black/50 z-20 lg:hidden backdrop-blur-sm"
-                    onClick={onClose}
-                />
-            )}
+            {
+                isOpen && (
+                    <div
+                        className="fixed inset-0 bg-black/50 z-20 lg:hidden backdrop-blur-sm"
+                        onClick={onClose}
+                    />
+                )
+            }
+
+            <ConfirmationModal
+                isOpen={isLogoutModalOpen}
+                onClose={() => setIsLogoutModalOpen(false)}
+                onConfirm={handleLogout}
+                title={isUrdu ? 'Logout / لاگ آؤٹ' : 'Logout'}
+                message={t('common.logoutConfirm') || 'Are you sure you want to logout?'}
+                confirmText={t('nav.logout')}
+                isDestructive={true}
+            />
         </>
     );
 }

@@ -12,6 +12,16 @@ import OrderDetail from '@/pages/OrderDetail';
 import Workers from '@/pages/Workers';
 import Backup from '@/pages/Backup';
 import Settings from '@/pages/Settings';
+import Login from '@/pages/Login';
+import { useAuthStore } from '@/stores/authStore';
+import { Navigate, Outlet } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+
+// Protected Route Component
+const ProtectedRoute = () => {
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    return isAuthenticated ? <AppLayout><Outlet /></AppLayout> : <Navigate to="/login" replace />;
+};
 
 function App() {
     const { i18n } = useTranslation();
@@ -28,8 +38,12 @@ function App() {
             dir={language === 'ur' ? 'rtl' : 'ltr'}
             className={`h-full ${language === 'ur' ? 'font-urdu' : 'font-sans'}`}
         >
-            <AppLayout>
-                <Routes>
+            <Toaster position="top-right" reverseOrder={false} />
+            <Routes>
+                <Route path="/login" element={<Login />} />
+
+                {/* Protected Routes */}
+                <Route element={<ProtectedRoute />}>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/customers" element={<Customers />} />
                     <Route path="/customers/:id" element={<CustomerDetail />} />
@@ -39,8 +53,8 @@ function App() {
                     <Route path="/workers" element={<Workers />} />
                     <Route path="/backup" element={<Backup />} />
                     <Route path="/settings" element={<Settings />} />
-                </Routes>
-            </AppLayout>
+                </Route>
+            </Routes>
         </div>
     );
 }
