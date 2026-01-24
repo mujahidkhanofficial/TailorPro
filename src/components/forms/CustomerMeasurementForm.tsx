@@ -164,7 +164,7 @@ export default function CustomerMeasurementForm({
                 {measurementFields.map((field) => (
                     <div key={field.key}>
                         <label className="block text-sm font-medium text-gray-600 mb-1">
-                            {isUrdu ? field.labelUr : `${field.labelEn} (${field.labelUr})`}
+                            {isUrdu ? field.labelUr : field.labelEn}
                         </label>
                         <input
                             type="text"
@@ -182,7 +182,7 @@ export default function CustomerMeasurementForm({
                 {/* Collar Nok Dropdown */}
                 <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'کالر نوک' : 'Collar Nok (کالر نوک)'}
+                        {isUrdu ? 'کالر نوک' : 'Collar Nok'}
                     </label>
                     <select
                         value={fields['collarNok'] || ''}
@@ -201,7 +201,7 @@ export default function CustomerMeasurementForm({
                 {/* Ban Patti Dropdown */}
                 <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'بین پٹی' : 'Ban Patti (بین پٹی)'}
+                        {isUrdu ? 'بین پٹی' : 'Ban Patti'}
                     </label>
                     <select
                         value={fields['banPatti'] || ''}
@@ -220,7 +220,7 @@ export default function CustomerMeasurementForm({
                 {/* Cuff Dropdown */}
                 <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'کف' : 'Cuff (کف)'}
+                        {isUrdu ? 'کف' : 'Cuff'}
                     </label>
                     <select
                         value={fields['cuff'] || ''}
@@ -239,7 +239,7 @@ export default function CustomerMeasurementForm({
                 {/* Front Pocket Dropdown */}
                 <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'سامنے جیب' : 'Front Pocket (سامنے جیب)'}
+                        {isUrdu ? 'سامنے جیب' : 'Front Pocket'}
                     </label>
                     <select
                         value={fields['frontPocket'] || ''}
@@ -258,7 +258,7 @@ export default function CustomerMeasurementForm({
                 {/* Side Pocket Dropdown */}
                 <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'سائیڈ جیب' : 'Side Pocket (سائیڈ جیب)'}
+                        {isUrdu ? 'سائیڈ جیب' : 'Side Pocket'}
                     </label>
                     <select
                         value={fields['sidePocket'] || ''}
@@ -277,7 +277,7 @@ export default function CustomerMeasurementForm({
                 {/* Front Strip Dropdown */}
                 <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'سامنے کی پٹی' : 'Front Strip (سامنے کی پٹی)'}
+                        {isUrdu ? 'سامنے کی پٹی' : 'Front Strip'}
                     </label>
                     <select
                         value={fields['frontStrip'] || ''}
@@ -296,7 +296,7 @@ export default function CustomerMeasurementForm({
                 {/* Hem Style Dropdown */}
                 <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'دامن' : 'Hem Style (دامن)'}
+                        {isUrdu ? 'دامن' : 'Daman'}
                     </label>
                     <select
                         value={fields['hemStyle'] || ''}
@@ -315,7 +315,7 @@ export default function CustomerMeasurementForm({
                 {/* Shalwar Farmaish Dropdown */}
                 <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'شلوار فرمائش' : 'Shalwar Farmaish (شلوار فرمائش)'}
+                        {isUrdu ? 'شلوار فرمائش' : 'Shalwar Farmaish'}
                     </label>
                     <select
                         value={fields['shalwarFarmaish'] || ''}
@@ -331,10 +331,10 @@ export default function CustomerMeasurementForm({
                     </select>
                 </div>
 
-                {/* Shalwar Width Input */}
+                {/* Shalwar Width Input - Keeping as it might be 'Ghera' separate from Shalwar Length */}
                 <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'شلوار چوڑائی' : 'Shalwar Width (شلوار چوڑائی)'}
+                        {isUrdu ? 'شلوار چوڑائی' : 'Shalwar Width'}
                     </label>
                     <input
                         type="text"
@@ -345,42 +345,11 @@ export default function CustomerMeasurementForm({
                         dir="ltr"
                     />
                 </div>
-
-                {/* Aasan Input */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'آسن' : 'Aasan (آسن)'}
-                    </label>
-                    <input
-                        type="text"
-                        value={fields['aasan'] || ''}
-                        onChange={(e) => setFields((prev) => ({ ...prev, aasan: e.target.value }))}
-                        className="input text-center text-lg font-semibold w-full"
-                        placeholder="—"
-                        dir="ltr"
-                    />
-                </div>
-
-                {/* Bazu Center Input */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'بازو سینٹر' : 'Bazu Center (بازو سینٹر)'}
-                    </label>
-                    <input
-                        type="text"
-                        value={fields['bazuCenter'] || ''}
-                        onChange={(e) => setFields((prev) => ({ ...prev, bazuCenter: e.target.value }))}
-                        className="input text-center text-lg font-semibold w-full"
-                        placeholder="—"
-                        dir="ltr"
-                    />
-                </div>
             </div>
-
             {/* Design Options (Checkboxes) */}
             <div>
                 <h4 className="text-sm font-medium text-gray-600 mb-3">
-                    {isUrdu ? 'فرمائش آپشنز' : 'Design Options (فرمائش آپشنز)'}
+                    {isUrdu ? 'فرمائش آپشنز' : 'Design Options'}
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {designOptions.map((option) => (
@@ -400,12 +369,12 @@ export default function CustomerMeasurementForm({
                                 className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                             />
                             <span className="text-sm font-medium">
-                                {isUrdu ? option.labelUr : `${option.labelEn} (${option.labelUr})`}
+                                {isUrdu ? option.labelUr : option.labelEn}
                             </span>
                         </label>
                     ))}
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

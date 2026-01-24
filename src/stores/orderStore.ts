@@ -36,15 +36,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     loadOrders: async () => {
         set({ loading: true });
         try {
-            const { statusFilter } = get();
-            let orders: Order[];
-
-            if (statusFilter === 'all') {
-                orders = await db.orders.orderBy('dueDate').toArray();
-            } else {
-                orders = await db.orders.where('status').equals(statusFilter).toArray();
-            }
-
+            const orders = await db.orders.orderBy('dueDate').toArray();
             set({ orders, loading: false });
         } catch (error) {
             console.error('Error loading orders:', error);
@@ -107,7 +99,6 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
     setStatusFilter: (status) => {
         set({ statusFilter: status });
-        get().loadOrders();
     },
 
     addOrder: async (orderData) => {

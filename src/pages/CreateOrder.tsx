@@ -1,13 +1,14 @@
-import { useRef, useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useOrderStore } from '@/stores/orderStore';
-import { db, Customer, Worker, Order, CustomerMeasurement } from '@/db/database';
+import { db, Customer, Worker } from '@/db/database';
 import { addDays, toInputDateFormat } from '@/utils/formatters';
 import { Check, Plus, Calendar, ArrowLeft, ChevronDown, Printer } from 'lucide-react';
 import CustomerFormModal from '@/components/forms/CustomerFormModal';
-import MeasurementPrint from '@/components/forms/MeasurementPrint';
 import PageTransition from '@/components/ui/PageTransition';
+import { usePrinter } from '@/hooks/usePrinter';
+import { generateMeasurementSlipHTML } from '@/utils/printHelpers';
 
 export default function CreateOrder() {
     const { t } = useTranslation();
@@ -36,10 +37,10 @@ export default function CreateOrder() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
 
+
+
     // Print State
-    const shouldPrint = useRef(false);
-    const [showPrintModal, setShowPrintModal] = useState(false);
-    const [printData, setPrintData] = useState<{ customer: Customer; measurement: CustomerMeasurement; order: Order } | null>(null);
+    const { printSlip } = usePrinter();
 
     useEffect(() => {
         loadData();
@@ -64,16 +65,16 @@ export default function CreateOrder() {
         setActiveWorkers(activeWorkers);
     }
 
-    const filteredCustomers = customers.filter(
+    const filteredCustomers = useMemo(() => customers.filter(
         (c) =>
             c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
             c.phone.includes(customerSearch)
-    );
+    ), [customers, customerSearch]);
 
     // Get selected customer info
     const selectedCustomer = customers.find((c) => c.id === formData.customerId);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent, shouldPrint = false) => {
         e.preventDefault();
 
         // Validation
@@ -102,18 +103,30 @@ export default function CreateOrder() {
                 karigarId: formData.karigarId || undefined,
             });
 
-            if (shouldPrint.current) {
+            if (shouldPrint) {
                 // Fetch data needed for printing
                 const customer = await db.customers.get(formData.customerId);
                 const measurement = await db.customerMeasurements.where('customerId').equals(formData.customerId).first();
-                const order = await db.orders.get(orderId);
+                const settings = await db.settings.get(1);
 
-                if (customer && measurement && order) {
-                    setPrintData({ customer, measurement, order });
-                    setShowPrintModal(true);
-                } else {
-                    navigate('/orders');
+                // Fetch Workers
+                const cutter = formData.cutterId ? await db.workers.get(formData.cutterId) : undefined;
+                const checker = formData.checkerId ? await db.workers.get(formData.checkerId) : undefined;
+                const karigar = formData.karigarId ? await db.workers.get(formData.karigarId) : undefined;
+
+                const workerNames = {
+                    cutter: cutter?.name,
+                    checker: checker?.name,
+                    karigar: karigar?.name
+                };
+
+                const savedOrder = await db.orders.get(orderId);
+
+                if (customer && measurement && savedOrder) {
+                    const html = generateMeasurementSlipHTML(customer, measurement, settings, workerNames, savedOrder);
+                    await printSlip(html);
                 }
+                navigate('/orders');
             } else {
                 navigate('/orders');
             }
@@ -125,13 +138,11 @@ export default function CreateOrder() {
     };
 
     const handleSaveAndPrint = (e: React.FormEvent) => {
-        e.preventDefault();
-        shouldPrint.current = true;
-        handleSubmit(e);
+        handleSubmit(e, true);
     };
 
     return (
-        <PageTransition className="space-y-6">
+        <PageTransition className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Header */}
             <div className="flex items-center gap-4">
                 <Link to="/orders" className="btn btn-secondary p-2 rounded-full w-10 h-10 flex items-center justify-center">
@@ -140,9 +151,9 @@ export default function CreateOrder() {
                 <h1 className="text-2xl font-bold text-gray-900">{t('orders.addNew')}</h1>
             </div>
 
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden max-w-4xl mx-auto">
                 <div className="p-6 md:p-8">
-                    <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto">
+                    <form onSubmit={handleSubmit} className="space-y-6 w-full">
 
                         {/* Customer Section */}
                         <div className="bg-gray-50/50 p-6 rounded-xl border border-gray-100 space-y-4">
@@ -188,7 +199,7 @@ export default function CreateOrder() {
 
                                 {customerSearch && !formData.customerId && (
                                     <div className="border rounded-lg max-h-60 overflow-y-auto mb-4 bg-white shadow-sm z-10 relative">
-                                        {filteredCustomers.map((c) => (
+                                        {filteredCustomers.slice(0, 50).map((c) => (
                                             <button
                                                 key={c.id}
                                                 type="button"
@@ -211,10 +222,16 @@ export default function CreateOrder() {
                                             </button>
                                         ))}
 
+                                        {filteredCustomers.length > 50 && (
+                                            <div className="p-2 text-center text-xs text-gray-400 bg-gray-50 border-t">
+                                                {t('customers.showingTopResults', { count: 50, total: filteredCustomers.length })}
+                                            </div>
+                                        )}
+
                                         <button
                                             type="button"
                                             onClick={() => setIsCustomerModalOpen(true)}
-                                            className="w-full text-start p-3 hover:bg-primary-50 text-primary-600 flex items-center gap-2 font-medium"
+                                            className="w-full text-start p-3 hover:bg-primary-50 text-primary-600 flex items-center gap-2 font-medium border-t"
                                         >
                                             <Plus className="w-4 h-4" />
                                             <span>{t('customers.createWithName', { name: customerSearch })}</span>
@@ -387,7 +404,7 @@ export default function CreateOrder() {
                                 type="button"
                                 onClick={handleSaveAndPrint}
                                 disabled={isSubmitting || !formData.customerId}
-                                className="btn bg-blue-600 text-white border-blue-800 hover:bg-blue-500 flex-1 flex items-center justify-center gap-2"
+                                className="btn btn-success flex-1 flex items-center justify-center gap-2"
                             >
                                 <Printer className="w-5 h-5" />
                                 {t('common.saveAndPrint')}
@@ -408,15 +425,7 @@ export default function CreateOrder() {
                         </div>
                     </form>
 
-                    {/* Print Modal */}
-                    {showPrintModal && printData && (
-                        <MeasurementPrint
-                            customer={printData.customer}
-                            measurement={printData.measurement}
-                            order={printData.order}
-                            onClose={() => navigate('/orders')}
-                        />
-                    )}
+
                 </div>
             </div>
 

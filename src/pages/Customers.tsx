@@ -81,11 +81,22 @@ export default function Customers() {
         <PageTransition className="space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-2xl font-bold text-gray-900">{t('customers.title')}</h1>
-                <button onClick={handleAddNew} className="btn btn-primary flex items-center gap-2">
-                    <Plus className="w-5 h-5" />
-                    {t('customers.addNew')}
-                </button>
+                <h1 className="text-2xl font-bold text-gray-900">
+                    {t('customers.title')} <span className="text-gray-500 text-lg font-medium">({customers.length})</span>
+                </h1>
+                <div className="flex gap-2">
+                    <button onClick={async () => {
+                        const { seedCustomers } = await import('@/db/seed');
+                        await seedCustomers(30);
+                        window.location.reload();
+                    }} className="btn btn-secondary flex items-center gap-2">
+                        + Mock Data
+                    </button>
+                    <button onClick={handleAddNew} className="btn btn-primary flex items-center gap-2">
+                        <Plus className="w-5 h-5" />
+                        {t('customers.addNew')}
+                    </button>
+                </div>
             </div>
 
 
@@ -133,7 +144,7 @@ export default function Customers() {
 
                     {/* Customer Cards Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {customers.map((customer) => (
+                        {customers.slice(0, 12).map((customer) => (
                             <div key={customer.id} className="bg-slate-800 rounded-xl p-6 shadow-lg text-slate-200 border border-slate-700 flex flex-col justify-between h-full group">
                                 {/* Header */}
                                 <div className="flex justify-between items-center pb-4 border-b border-slate-700 mb-4">
@@ -208,6 +219,11 @@ export default function Customers() {
                             </div>
                         ))}
                     </div>
+                    {customers.length > 12 && (
+                        <div className="text-center text-gray-500 text-sm mt-4 italic">
+                            {t('customers.showingTopResults', { count: 12, total: customers.length })}
+                        </div>
+                    )}
                 </>
             )}
 

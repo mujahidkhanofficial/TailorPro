@@ -25,7 +25,7 @@
     "customers": {
         "title": "Customers",
         "addNew": "Add Customer",
-        "search": "Search by name or phone...",
+        "search": "Search by name, id or phone...",
         "name": "Full Name",
         "phone": "Phone Number",
         "address": "Address",
@@ -38,7 +38,8 @@
         "saveAndAddMeasurements": "Save & Add Measurements",
         "noCustomersFound": "No customers found",
         "addNewButton": "Add New Customer",
-        "createWithName": "Create \"{{name}}\""
+        "createWithName": "Create \"{{name}}\"",
+        "showingTopResults": "Showing top {{count}} of {{total}} customers. Use search to find specific customers."
     },
     "orders": {
         "title": "Orders",
@@ -96,7 +97,9 @@
         "trouser_waist": "Trouser Waist",
         "trouser_length": "Trouser Length",
         "shalwar_waist": "Shalwar Waist",
-        "shalwar_length": "Shalwar Length"
+        "shalwar_length": "Shalwar Length",
+        "bazu_center": "Bazu Center",
+        "aasan": "Aasan"
     },
     "backup": {
         "title": "Backup & Restore",
@@ -137,6 +140,7 @@
         "deleteSuccess": "Deleted successfully",
         "updateSuccess": "Updated successfully",
         "addSuccess": "Added successfully",
+        "saveAndPrint": "Save & Print",
         "error": "An error occurred"
     },
     "validation": {

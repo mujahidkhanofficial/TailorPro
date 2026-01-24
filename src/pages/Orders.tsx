@@ -81,14 +81,19 @@ export default function Orders() {
     const [searchQuery, setSearchQuery] = useState('');
 
     // Filter by search query
+    // Filter by search query and status
     const filteredOrders = orders.filter(order => {
         const customer = customerMap[order.customerId];
         const searchLower = searchQuery.toLowerCase();
 
-        return !searchQuery ||
+        const matchesSearch = !searchQuery ||
             order.id?.toString().includes(searchLower) ||
             customer?.name.toLowerCase().includes(searchLower) ||
             customer?.phone.includes(searchLower);
+
+        const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+
+        return matchesSearch && matchesStatus;
     });
 
     const confirmDelete = async () => {
@@ -112,66 +117,100 @@ export default function Orders() {
 
             {/* Status Filter - With Icons & 3D Effect */}
             <div className="flex flex-wrap gap-2">
-                <button
-                    onClick={() => setStatusFilter('all')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'all'
-                        ? 'bg-gray-800 text-white border-gray-950'
-                        : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
-                        }`}
-                >
-                    <ShoppingBag className="w-4 h-4" />
-                    {t('common.all')}
-                </button>
-                <button
-                    onClick={() => setStatusFilter('new')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'new'
-                        ? 'bg-blue-500 text-white border-blue-700'
-                        : 'bg-blue-100 text-blue-600 border-blue-300 hover:bg-blue-200'
-                        }`}
-                >
-                    <Plus className="w-4 h-4" />
-                    {t('orders.statusNew')}
-                </button>
-                <button
-                    onClick={() => setStatusFilter('in_progress')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'in_progress'
-                        ? 'bg-yellow-500 text-white border-yellow-700'
-                        : 'bg-yellow-100 text-yellow-600 border-yellow-300 hover:bg-yellow-200'
-                        }`}
-                >
-                    <Clock className="w-4 h-4" />
-                    {t('orders.statusInProgress')}
-                </button>
-                <button
-                    onClick={() => setStatusFilter('ready')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'ready'
-                        ? 'bg-green-500 text-white border-green-700'
-                        : 'bg-green-100 text-green-600 border-green-300 hover:bg-green-200'
-                        }`}
-                >
-                    <CheckCircle className="w-4 h-4" />
-                    {t('orders.statusReady')}
-                </button>
-                <button
-                    onClick={() => setStatusFilter('delivered')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'delivered'
-                        ? 'bg-gray-500 text-white border-gray-700'
-                        : 'bg-gray-200 text-gray-600 border-gray-400 hover:bg-gray-300'
-                        }`}
-                >
-                    <Truck className="w-4 h-4" />
-                    {t('orders.statusDelivered')}
-                </button>
-                <button
-                    onClick={() => setStatusFilter('completed')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'completed'
-                        ? 'bg-purple-500 text-white border-purple-700'
-                        : 'bg-purple-100 text-purple-600 border-purple-300 hover:bg-purple-200'
-                        }`}
-                >
-                    <CheckSquare className="w-4 h-4" />
-                    {t('orders.statusCompleted')}
-                </button>
+                {/* Calculate counts */}
+                {(() => {
+                    const counts = {
+                        all: orders.length,
+                        new: orders.filter(o => o.status === 'new').length,
+                        in_progress: orders.filter(o => o.status === 'in_progress').length,
+                        ready: orders.filter(o => o.status === 'ready').length,
+                        delivered: orders.filter(o => o.status === 'delivered').length,
+                        completed: orders.filter(o => o.status === 'completed').length,
+                    };
+
+                    return (
+                        <>
+                            <button
+                                onClick={() => setStatusFilter('all')}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'all'
+                                    ? 'bg-gray-800 text-white border-gray-950'
+                                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
+                                    }`}
+                            >
+                                <ShoppingBag className="w-4 h-4" />
+                                {t('common.all')}
+                                <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${statusFilter === 'all' ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-700'}`}>
+                                    {counts.all}
+                                </span>
+                            </button>
+                            <button
+                                onClick={() => setStatusFilter('new')}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'new'
+                                    ? 'bg-blue-500 text-white border-blue-700'
+                                    : 'bg-blue-100 text-blue-600 border-blue-300 hover:bg-blue-200'
+                                    }`}
+                            >
+                                <Plus className="w-4 h-4" />
+                                {t('orders.statusNew')}
+                                <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${statusFilter === 'new' ? 'bg-blue-600 text-white' : 'bg-blue-200 text-blue-700'}`}>
+                                    {counts.new}
+                                </span>
+                            </button>
+                            <button
+                                onClick={() => setStatusFilter('in_progress')}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'in_progress'
+                                    ? 'bg-yellow-500 text-white border-yellow-700'
+                                    : 'bg-yellow-100 text-yellow-600 border-yellow-300 hover:bg-yellow-200'
+                                    }`}
+                            >
+                                <Clock className="w-4 h-4" />
+                                {t('orders.statusInProgress')}
+                                <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${statusFilter === 'in_progress' ? 'bg-yellow-600 text-white' : 'bg-yellow-200 text-yellow-700'}`}>
+                                    {counts.in_progress}
+                                </span>
+                            </button>
+                            <button
+                                onClick={() => setStatusFilter('ready')}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'ready'
+                                    ? 'bg-green-500 text-white border-green-700'
+                                    : 'bg-green-100 text-green-600 border-green-300 hover:bg-green-200'
+                                    }`}
+                            >
+                                <CheckCircle className="w-4 h-4" />
+                                {t('orders.statusReady')}
+                                <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${statusFilter === 'ready' ? 'bg-green-600 text-white' : 'bg-green-200 text-green-700'}`}>
+                                    {counts.ready}
+                                </span>
+                            </button>
+                            <button
+                                onClick={() => setStatusFilter('delivered')}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'delivered'
+                                    ? 'bg-gray-700 text-white border-gray-900' // Darker active state for better contrast
+                                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
+                                    }`}
+                            >
+                                <Truck className="w-4 h-4" />
+                                {t('orders.statusDelivered')}
+                                <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${statusFilter === 'delivered' ? 'bg-gray-600 text-white' : 'bg-gray-200 text-gray-700'}`}>
+                                    {counts.delivered}
+                                </span>
+                            </button>
+                            <button
+                                onClick={() => setStatusFilter('completed')}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:mt-1 ${statusFilter === 'completed'
+                                    ? 'bg-purple-500 text-white border-purple-700'
+                                    : 'bg-purple-100 text-purple-600 border-purple-300 hover:bg-purple-200'
+                                    }`}
+                            >
+                                <CheckSquare className="w-4 h-4" />
+                                {t('orders.statusCompleted')}
+                                <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${statusFilter === 'completed' ? 'bg-purple-600 text-white' : 'bg-purple-200 text-purple-700'}`}>
+                                    {counts.completed}
+                                </span>
+                            </button>
+                        </>
+                    );
+                })()}
             </div>
 
             {/* Search - Grid wrapper with same breakpoints as cards */}

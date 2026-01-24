@@ -12,4 +12,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     printToPDF: (htmlContent: string) =>
         ipcRenderer.invoke('print-to-pdf', htmlContent),
+
+    getPrinters: () =>
+        ipcRenderer.invoke('get-printers'),
+
+    printSilent: (htmlContent: string, printerName: string) =>
+        ipcRenderer.invoke('print-silent', htmlContent, printerName),
 });

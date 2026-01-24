@@ -198,6 +198,7 @@ export default function CustomerDetail() {
                     customer={customer}
                     measurement={printData}
                     onClose={() => setPrintData(null)}
+                    autoPrint={true}
                 />
             )}
         </div>

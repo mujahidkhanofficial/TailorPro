@@ -2,13 +2,15 @@
 
 // Standardized measurement fields (matching reference slip)
 export const measurementFields = [
-    { key: 'length', labelEn: 'Length', labelUr: 'لمبائی' },
-    { key: 'sleeve', labelEn: 'Sleeve', labelUr: 'آستین' },
-    { key: 'chest', labelEn: 'Chest', labelUr: 'چھاتی' },
+    { key: 'length', labelEn: 'Lambai', labelUr: 'لمبائی' },
+    { key: 'sleeve', labelEn: 'Aastin', labelUr: 'آستین' },
+    { key: 'bazu_center', labelEn: 'Bazu Center', labelUr: 'بازو سینٹر' },
+    { key: 'chest', labelEn: 'Chaati', labelUr: 'چھاتی' },
     { key: 'tera', labelEn: 'Tera', labelUr: 'تیرا' },
     { key: 'kalar', labelEn: 'Collar', labelUr: 'کالر' },
-    { key: 'daaman', labelEn: 'Hem Width', labelUr: 'دامن' },
-    { key: 'shalwar', labelEn: 'Shalwar Length', labelUr: 'شلوار' },
+    { key: 'daaman', labelEn: 'Daman', labelUr: 'دامن' },
+    { key: 'shalwar', labelEn: 'Shalwar', labelUr: 'شلوار' },
+    { key: 'aasan', labelEn: 'Aasan', labelUr: 'آسن' },
     { key: 'pancha', labelEn: 'Pancha', labelUr: 'پانچہ' },
 ];
 
@@ -47,18 +49,18 @@ export const cuffOptions = [
 // Front Pocket (سامنے جیب) dropdown options
 export const frontPocketOptions = [
     { value: '', labelEn: 'Select...', labelUr: 'منتخب کریں...' },
-    { value: '3x3.5', labelEn: '3 × 3.5', labelUr: 'تین × ساڑھے تین' },
-    { value: '4x4.5', labelEn: '4 × 4.5', labelUr: 'چار × ساڑھے چار' },
-    { value: '4.75x5.25', labelEn: '4.75 × 5.25', labelUr: 'پونے پانچ × سوا پانچ' },
-    { value: '5x5.5', labelEn: '5 × 5.5', labelUr: 'پانچ × ساڑھے پانچ' },
-    { value: '5.25x5.75', labelEn: '5.25 × 5.75', labelUr: 'سوا پانچ × پونے چھ' },
+    { value: '3x3.5', labelEn: '3 x 3.5', labelUr: 'تین × ساڑھے تین' },
+    { value: '4x4.5', labelEn: '4 x 4.5', labelUr: 'چار × ساڑھے چار' },
+    { value: '4.75x5.25', labelEn: '4.75 x 5.25', labelUr: 'پونے پانچ × سوا پانچ' },
+    { value: '5x5.5', labelEn: '5 x 5.5', labelUr: 'پانچ × ساڑھے پانچ' },
+    { value: '5.25x5.75', labelEn: '5.25 x 5.75', labelUr: 'سوا پانچ × پونے چھ' },
 ];
 
 // Side Pocket (سائیڈ جیب) dropdown options
 export const sidePocketOptions = [
     { value: '', labelEn: 'Select...', labelUr: 'منتخب کریں...' },
-    { value: '1', labelEn: 'One', labelUr: 'ایک' },
-    { value: '2', labelEn: 'Two', labelUr: 'دو' },
+    { value: '1', labelEn: '1', labelUr: 'ایک' },
+    { value: '2', labelEn: '2', labelUr: 'دو' },
 ];
 
 // Front Strip (سامنے کی پٹی) dropdown options
@@ -70,7 +72,7 @@ export const frontStripOptions = [
     { value: '1.5', labelEn: '1.5 inch', labelUr: 'ڈیڑھ انچ' },
 ];
 
-// Hem Style (دامن) dropdown options
+// Daman dropdown options
 export const hemStyleOptions = [
     { value: '', labelEn: 'Select...', labelUr: 'منتخب کریں...' },
     { value: 'choras', labelEn: 'Choras Daman', labelUr: 'چورس دامن' },

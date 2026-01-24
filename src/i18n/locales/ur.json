@@ -38,7 +38,8 @@
         "saveAndAddMeasurements": "محفوظ کریں اور پیمائش شامل کریں",
         "noCustomersFound": "کوئی گاہک نہیں ملا",
         "addNewButton": "نیا گاہک شامل کریں",
-        "createWithName": "\"{{name}}\" بنائیں"
+        "createWithName": "\"{{name}}\" بنائیں",
+        "showingTopResults": "کل {{total}} میں سے پہلے {{count}} کسٹمرز دکھائے جا رہے ہیں۔ مخصوص کسٹمرز تلاش کرنے کے لیے سرچ کا استعمال کریں۔"
     },
     "orders": {
         "title": "آرڈرز",
@@ -96,7 +97,9 @@
         "trouser_waist": "پتلون کمر",
         "trouser_length": "پتلون لمبائی",
         "shalwar_waist": "شلوار کمر",
-        "shalwar_length": "شلوار لمبائی"
+        "shalwar_length": "شلوار لمبائی",
+        "bazu_center": "بازو سینٹر",
+        "aasan": "آسن"
     },
     "backup": {
         "title": "بیک اپ اور بحالی",
@@ -137,6 +140,7 @@
         "deleteSuccess": "کامیابی سے حذف ہو گیا",
         "updateSuccess": "کامیابی سے اپڈیٹ ہو گیا",
         "addSuccess": "کامیابی سے شامل ہو گیا",
+        "saveAndPrint": "محفوظ اور پرنٹ کریں",
         "error": "ایک خرابی پیش آ گئی"
     },
     "validation": {

@@ -1,8 +1,8 @@
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { db, Customer, Order } from '@/db/database';
+import { db, Customer, Order, CustomerMeasurement } from '@/db/database';
 import PageTransition from '@/components/ui/PageTransition';
-import { Save, FileText, Upload, AlertTriangle } from 'lucide-react';
+import { Upload, AlertTriangle, Download, FileSpreadsheet } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Backup() {
@@ -21,10 +21,14 @@ export default function Backup() {
                 throw new Error('Invalid backup file');
             }
 
-            await db.transaction('rw', db.customers, db.orders, db.measurements, async () => {
+            await db.transaction('rw', db.customers, db.orders, db.measurements, db.customerMeasurements, async () => {
                 await db.customers.bulkPut(backup.data.customers);
                 await db.orders.bulkPut(backup.data.orders);
-                if (backup.data.measurements) {
+                // Support both legacy and new measurement tables
+                if (backup.data.customerMeasurements) {
+                    await db.customerMeasurements.bulkPut(backup.data.customerMeasurements);
+                } else if (backup.data.measurements) {
+                    // Legacy fallback
                     await db.measurements.bulkPut(backup.data.measurements);
                 }
             });
@@ -45,7 +49,8 @@ export default function Backup() {
                 data: {
                     customers: await db.customers.toArray(),
                     orders: await db.orders.toArray(),
-                    measurements: await db.measurements.toArray(),
+                    measurements: await db.measurements.toArray(), // Legacy (optional)
+                    customerMeasurements: await db.customerMeasurements.toArray(), // New Table
                 },
             };
 
@@ -78,14 +83,28 @@ export default function Backup() {
         try {
             const customers = await db.customers.toArray();
             const orders = await db.orders.toArray();
+            const measurements = await db.customerMeasurements.toArray();
+
+            // Create a map for quick access to measurements by customerId
+            const measurementMap = measurements.reduce((acc, m) => {
+                acc[m.customerId] = m;
+                return acc;
+            }, {} as Record<number, CustomerMeasurement>);
 
             // Build CSV
-            const headers = ['Name', 'Phone', 'Address', 'Total Orders', 'Last Order Date'];
+            // Added measurement columns: Length, Sleeve, Bazu Center, Chest, Tera, Collar, Daman, Shalwar, Aasan, Pancha
+            const headers = [
+                'Name', 'Phone', 'Address', 'Total Orders', 'Last Order Date',
+                'Length', 'Sleeve', 'Bazu Center', 'Chest', 'Tera', 'Collar', 'Daman', 'Shalwar', 'Aasan', 'Pancha'
+            ];
+
             const rows = customers.map((c: Customer) => {
                 const customerOrders = orders.filter((o: Order) => o.customerId === c.id);
                 const lastOrder = customerOrders.sort(
                     (a: Order, b: Order) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
                 )[0];
+
+                const m = measurementMap[c.id!]?.fields || {};
 
                 return [
                     `"${c.name}"`,
@@ -93,10 +112,23 @@ export default function Backup() {
                     `"${c.address || ''}"`,
                     customerOrders.length,
                     lastOrder ? new Date(lastOrder.createdAt).toLocaleDateString() : '',
+                    // Measurements
+                    `"${m.length || ''}"`,
+                    `"${m.sleeve || ''}"`,
+                    `"${m.bazu_center || ''}"`,
+                    `"${m.chest || ''}"`,
+                    `"${m.tera || ''}"`,
+                    `"${m.kalar || ''}"`,
+                    `"${m.daaman || ''}"`,
+                    `"${m.shalwar || ''}"`,
+                    `"${m.aasan || ''}"`,
+                    `"${m.pancha || ''}"`,
                 ].join(',');
             });
 
-            const csv = [headers.join(','), ...rows].join('\n');
+            // Add BOM for Excel UTF-8 compatibility
+            const BOM = '\uFEFF';
+            const csv = BOM + [headers.join(','), ...rows].join('\n');
             const filename = `tailorpro-customers-${new Date().toISOString().split('T')[0]}.csv`;
 
             if (window.electronAPI) {
@@ -148,11 +180,14 @@ export default function Backup() {
             }
 
             // Import data (merge/replace)
-            await db.transaction('rw', db.customers, db.orders, db.measurements, async () => {
+            // Import data (merge/replace)
+            await db.transaction('rw', db.customers, db.orders, db.measurements, db.customerMeasurements, async () => {
                 // Use bulkPut to update or insert
                 await db.customers.bulkPut(backup.data.customers);
                 await db.orders.bulkPut(backup.data.orders);
-                if (backup.data.measurements) {
+                if (backup.data.customerMeasurements) {
+                    await db.customerMeasurements.bulkPut(backup.data.customerMeasurements);
+                } else if (backup.data.measurements) {
                     await db.measurements.bulkPut(backup.data.measurements);
                 }
             });
@@ -173,12 +208,12 @@ export default function Backup() {
                 <h2 className="text-lg font-semibold">{t('backup.export')}</h2>
 
                 <button onClick={handleExportFull} className="btn btn-primary w-full flex items-center justify-center gap-2">
-                    <Save className="w-5 h-5 text-white" />
+                    <Upload className="w-5 h-5 text-white" />
                     {t('backup.exportFull')}
                 </button>
 
                 <button onClick={handleExportCSV} className="btn btn-secondary w-full flex items-center justify-center gap-2">
-                    <FileText className="w-5 h-5" />
+                    <FileSpreadsheet className="w-5 h-5" />
                     {t('backup.exportCustomers')}
                 </button>
             </div>
@@ -192,8 +227,8 @@ export default function Backup() {
                     {t('backup.warning')}
                 </div>
 
-                <button onClick={handleImport} className="btn btn-secondary w-full flex items-center justify-center gap-2">
-                    <Upload className="w-5 h-5" />
+                <button onClick={handleImport} className="btn btn-success w-full flex items-center justify-center gap-2">
+                    <Download className="w-5 h-5" />
                     {t('backup.importBackup')}
                 </button>
             </div>

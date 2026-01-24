@@ -61,8 +61,12 @@ export interface Settings {
     address: string;
     phone1: string;
     phone2: string;
+    defaultPrinter?: string;
     updatedAt: Date;
 }
+// ... (skip lines)
+// Version 7: Add defaultPrinter settings
+
 
 export interface Worker {
     id?: number;
@@ -89,49 +93,9 @@ class TailorProDB extends Dexie {
     constructor() {
         super('TailorProDB');
 
-        // Schema Versions
+        // Development Model: Single Schema Version containing all tables
+        // Since we are in development, we are squashing migrations into version 1.
         this.version(1).stores({
-            customers: '++id, name, phone, createdAt',
-            orders: '++id, customerId, status, dueDate, createdAt',
-            measurements: '++id, orderId, template',
-        });
-
-        this.version(2).stores({
-            customers: '++id, name, phone, createdAt',
-            orders: '++id, customerId, status, dueDate, createdAt',
-            measurements: '++id, orderId, template',
-            customerMeasurements: '++id, customerId, updatedAt',
-        });
-
-        this.version(3).stores({
-            customers: '++id, name, phone, createdAt',
-            orders: '++id, customerId, status, dueDate, createdAt',
-            measurements: '++id, orderId, template',
-            customerMeasurements: '++id, customerId, updatedAt',
-            settings: '++id, updatedAt'
-        });
-
-        // Version 4: Add workers table and worker assignments to orders
-        this.version(4).stores({
-            customers: '++id, name, phone, createdAt',
-            orders: '++id, customerId, status, dueDate, createdAt, cutterId, checkerId, karigarId',
-            measurements: '++id, orderId, template',
-            customerMeasurements: '++id, customerId, updatedAt',
-            settings: '++id, updatedAt',
-            workers: '++id, name, role, isActive, createdAt'
-        });
-
-        // Version 5: Remove garmentType dependency - measurements at customer level only
-        this.version(5).stores({
-            customers: '++id, name, phone, createdAt',
-            orders: '++id, customerId, status, dueDate, createdAt, cutterId, checkerId, karigarId',
-            measurements: '++id, orderId', // template field removed
-            customerMeasurements: '++id, customerId, updatedAt',
-            settings: '++id, updatedAt',
-            workers: '++id, name, role, isActive, createdAt'
-        });
-        // Version 6: Enforce unique phone
-        this.version(6).stores({
             customers: '++id, name, &phone, createdAt',
             orders: '++id, customerId, status, dueDate, createdAt, cutterId, checkerId, karigarId',
             measurements: '++id, orderId',

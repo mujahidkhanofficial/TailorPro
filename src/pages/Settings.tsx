@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useUIStore } from '@/stores/uiStore';
 import { useState, useEffect } from 'react';
-import { Scissors, Save, Building2, Phone, MapPin } from 'lucide-react';
+import { Scissors, Save, Building2, Phone, MapPin, Printer } from 'lucide-react';
 import { db, Settings as ShopSettings } from '@/db/database';
 import toast from 'react-hot-toast';
 
@@ -11,6 +11,8 @@ export default function Settings() {
     const { t, i18n } = useTranslation();
     const { language, setLanguage } = useUIStore();
     const [appVersion, setAppVersion] = useState<string>('');
+    const [availablePrinters, setAvailablePrinters] = useState<any[]>([]);
+    const isUrdu = i18n.language === 'ur';
 
     // Shop Settings State
     const [settings, setSettings] = useState<ShopSettings>({
@@ -25,6 +27,7 @@ export default function Settings() {
         // Load App Version
         if (window.electronAPI) {
             window.electronAPI.getAppVersion().then(setAppVersion);
+            window.electronAPI.getPrinters().then(setAvailablePrinters);
         }
 
         // Load Shop Settings
@@ -126,8 +129,38 @@ export default function Settings() {
                 </div>
             </div>
 
+            {/* Printer Settings */}
+            < div className="card" >
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <Printer className="w-5 h-5" />
+                        Printer Settings
+                    </h2>
+                </div>
+                <div className="space-y-4">
+                    <div>
+                        <label className="label">Default Printer</label>
+                        <select
+                            className="input"
+                            value={settings.defaultPrinter || ''}
+                            onChange={(e) => setSettings({ ...settings, defaultPrinter: e.target.value })}
+                        >
+                            <option value="">Select a printer...</option>
+                            {availablePrinters.map((p) => (
+                                <option key={p.name} value={p.name}>
+                                    {p.name}
+                                </option>
+                            ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                            {isUrdu ? 'منتخب کردہ پرنٹر پر رسیدیں خود بخود پرنٹ ہوں گی۔' : 'Receipts will automatically print to this printer.'}
+                        </p>
+                    </div>
+                </div>
+            </div >
+
             {/* Language Selection */}
-            <div className="card">
+            < div className="card" >
                 <h2 className="text-lg font-semibold mb-4">{t('settings.language')}</h2>
                 <div className="flex gap-4">
                     <button
@@ -152,10 +185,10 @@ export default function Settings() {
                         <span className="font-urdu font-medium">اردو</span>
                     </button>
                 </div>
-            </div>
+            </div >
 
             {/* About Section */}
-            <div className="card">
+            < div className="card" >
                 <h2 className="text-lg font-semibold mb-4">{t('settings.about')}</h2>
 
                 <div className="space-y-4">
@@ -174,7 +207,7 @@ export default function Settings() {
                         <span className="font-semibold text-gray-900">v{appVersion || '1.0.0'}</span>
                     </div>
                 </div>
-            </div>
-        </PageTransition>
+            </div >
+        </PageTransition >
     );
 }

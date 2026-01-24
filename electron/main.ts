@@ -258,3 +258,57 @@ ipcMain.handle('print-to-pdf', async (_event, htmlContent: string) => {
         return { success: false, error: error.message };
     }
 });
+
+// 3. GET PRINTERS Handler
+ipcMain.handle('get-printers', async () => {
+    if (mainWindow) {
+        return await mainWindow.webContents.getPrintersAsync();
+    }
+    return [];
+});
+
+// 4. SILENT PRINT Handler
+ipcMain.handle('print-silent', async (_event, htmlContent: string, printerName: string) => {
+    let printWindow: BrowserWindow | null = null;
+    try {
+        printWindow = new BrowserWindow({
+            show: false,
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false // Simplifies content injection for invalid HTML safety
+            }
+        });
+
+        await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`);
+
+        // Check availability
+        const printers = await printWindow.webContents.getPrintersAsync();
+        const targetPrinter = printers.find(p => p.name === printerName);
+
+        if (!targetPrinter) {
+            printWindow.close();
+            return { success: false, error: 'Printer not found' };
+        }
+
+        // Print
+        await new Promise<void>((resolve, reject) => {
+            printWindow!.webContents.print({
+                silent: true,
+                deviceName: printerName,
+                printBackground: true,
+                margins: { marginType: 'none' }
+            }, (success, errorType) => {
+                if (!success) reject(new Error(errorType));
+                else resolve();
+            });
+        });
+
+        printWindow.close();
+        return { success: true };
+
+    } catch (error: any) {
+        console.error('Silent Print Error:', error);
+        if (printWindow) printWindow.close();
+        return { success: false, error: error.message };
+    }
+});

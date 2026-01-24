@@ -9,6 +9,7 @@ interface MeasurementPrintProps {
     measurement: CustomerMeasurement;
     order?: Order;
     onClose: () => void;
+    autoPrint?: boolean;
 }
 
 export default function MeasurementPrint({
@@ -16,6 +17,7 @@ export default function MeasurementPrint({
     measurement,
     order,
     onClose,
+    autoPrint = false,
 }: MeasurementPrintProps) {
     const [isPrinting, setIsPrinting] = useState(false);
     const [settings, setSettings] = useState<Settings | undefined>(undefined);
@@ -45,6 +47,16 @@ export default function MeasurementPrint({
         };
         loadData();
     }, [order]);
+
+    useEffect(() => {
+        if (autoPrint && settings && (Object.keys(workerNames).length > 0 || !order)) {
+            // Small delay to allow state to settle
+            const timer = setTimeout(() => {
+                handlePrint();
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [autoPrint, settings, workerNames, order]);
 
     const handlePrint = async () => {
         setIsPrinting(true);
@@ -109,7 +121,7 @@ export default function MeasurementPrint({
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                 <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
                     <div className="flex justify-between items-center p-4 border-b">
-                        <h3 className="text-lg font-bold">پرنٹ پرچی</h3>
+                        <h3 className="text-lg font-bold">Print Preview</h3>
                         <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full">
                             <X className="w-5 h-5" />
                         </button>
@@ -134,7 +146,7 @@ export default function MeasurementPrint({
                             ) : (
                                 <Printer className="w-5 h-5" />
                             )}
-                            <span className="font-urdu">{isPrinting ? 'PDF بن رہا ہے...' : 'PDF بنائیں'}</span>
+                            <span className="font-urdu">{isPrinting ? 'PDF بن رہا ہے...' : 'Print (System)'}</span>
                         </button>
                         <button onClick={onClose} className="btn btn-secondary w-full font-urdu">
                             بند کریں
