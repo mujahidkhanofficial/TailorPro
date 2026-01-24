@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { db, Customer, Order, CustomerMeasurement } from '@/db/database';
+import toast from 'react-hot-toast';
 import { formatDate, formatDaysRemaining } from '@/utils/formatters';
 import { orderStatusOptions } from '@/db/templates';
 import CustomerMeasurementForm from '@/components/forms/CustomerMeasurementForm';
-import MeasurementPrint from '@/components/forms/MeasurementPrint';
+import { generateMeasurementSlipHTML } from '@/utils/printHelpers';
+import { usePrinter } from '@/hooks/usePrinter';
+
 import { ArrowLeft, Phone, MapPin } from 'lucide-react';
 
 export default function CustomerDetail() {
@@ -18,7 +21,7 @@ export default function CustomerDetail() {
     const [loading, setLoading] = useState(true);
     const initialTab = searchParams.get('tab') === 'orders' ? 'orders' : 'measurements';
     const [activeTab, setActiveTab] = useState<'orders' | 'measurements'>(initialTab);
-    const [printData, setPrintData] = useState<CustomerMeasurement | null>(null);
+
 
     useEffect(() => {
         async function loadData() {
@@ -41,9 +44,76 @@ export default function CustomerDetail() {
         loadData();
     }, [id]);
 
-    function handlePrint(measurement: CustomerMeasurement) {
-        setPrintData(measurement);
-    }
+    const { printSlip } = usePrinter();
+    const previewHtmlRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        const handleMessage = async (event: MessageEvent) => {
+            if (event.data === 'save-pdf-request') {
+                if (!customer || !previewHtmlRef.current) return;
+
+                // Show loading toast
+                const loadingId = toast.loading(
+                    isUrdu ? 'محفوظ کیا جا رہا ہے...' : 'Saving PDF...',
+                    { position: 'bottom-center' }
+                );
+
+                if (window.electronAPI && window.electronAPI.savePDF) {
+                    try {
+                        const result = await window.electronAPI.savePDF(previewHtmlRef.current);
+                        if (result.success) {
+                            toast.success(isUrdu ? 'محفوظ کرلیا گیا' : 'PDF Saved Successfully', { id: loadingId });
+                        } else if (result.error && result.error !== 'Cancelled') {
+                            toast.error(isUrdu ? 'محفوظ کرنے میں ناکامی' : 'Save Failed: ' + result.error, { id: loadingId });
+                        } else {
+                            toast.dismiss(loadingId); // Cancelled
+                        }
+                    } catch (error) {
+                        toast.error('Error saving PDF', { id: loadingId });
+                    }
+                } else {
+                    toast.error('PDF Save API not available');
+                }
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, [customer]);
+
+    const handlePrint = async (measurement: CustomerMeasurement) => {
+        if (!customer) return;
+
+        try {
+            const settings = await db.settings.get(1);
+            // No specific order context here, so no worker names or order dates
+            const html = generateMeasurementSlipHTML(customer, measurement, settings);
+            await printSlip(html, { silentOnly: true });
+        } catch (error) {
+            console.error('Print Error:', error);
+        }
+    };
+
+    const handlePreview = async (measurement: CustomerMeasurement) => {
+        console.log('handlePreview called in CustomerDetail');
+        if (!customer) return;
+
+        try {
+            const settings = await db.settings.get(1);
+            const html = generateMeasurementSlipHTML(customer, measurement, settings);
+            previewHtmlRef.current = html;
+
+            // Open in new window (Matching OrderDetail)
+            const win = window.open('', '_blank');
+            if (win) {
+                win.document.write(html);
+                win.document.close();
+            }
+        } catch (error: any) {
+            console.error('Preview Error:', error);
+            toast.error('Failed to generate preview: ' + error.message);
+        }
+    };
 
     if (loading) {
         return (
@@ -134,6 +204,7 @@ export default function CustomerDetail() {
                         customerId={customer.id!}
                         customerName={customer.name}
                         onPrint={handlePrint}
+                        onPreview={handlePreview}
                     />
                 </div>
             )}
@@ -192,15 +263,7 @@ export default function CustomerDetail() {
                 </div>
             )}
 
-            {/* Print Modal */}
-            {printData && customer && (
-                <MeasurementPrint
-                    customer={customer}
-                    measurement={printData}
-                    onClose={() => setPrintData(null)}
-                    autoPrint={true}
-                />
-            )}
+
         </div>
     );
 }

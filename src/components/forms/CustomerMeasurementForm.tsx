@@ -2,18 +2,22 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { db, CustomerMeasurement } from '@/db/database';
 import { measurementFields, designOptions, collarNokOptions, banPattiOptions, cuffOptions, frontPocketOptions, sidePocketOptions, frontStripOptions, hemStyleOptions, shalwarFarmaishOptions } from '@/db/templates';
-import { Save, Printer, RotateCcw, CheckCircle, AlertCircle } from 'lucide-react';
+import { Save, Printer, RotateCcw, CheckCircle, AlertCircle, Eye } from 'lucide-react';
 import { useAutosave } from '@/hooks/useAutosave';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
+import toast from 'react-hot-toast';
 
 interface CustomerMeasurementFormProps {
     customerId: number;
     customerName?: string; // Optional, for future use
     onPrint?: (measurement: CustomerMeasurement) => void;
+    onPreview?: (measurement: CustomerMeasurement) => void;
 }
 
 export default function CustomerMeasurementForm({
     customerId,
     onPrint,
+    onPreview
 }: CustomerMeasurementFormProps) {
     const { i18n } = useTranslation();
     const isUrdu = i18n.language === 'ur';
@@ -22,6 +26,7 @@ export default function CustomerMeasurementForm({
     const [options, setOptions] = useState<Record<string, boolean>>({});
     const [existingId, setExistingId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
 
     // Load existing measurements on mount
     useEffect(() => {
@@ -86,6 +91,10 @@ export default function CustomerMeasurementForm({
     const saveStatus = useAutosave({ fields, options }, saveData, 1000);
 
     function handleReset() {
+        setShowResetConfirm(true);
+    }
+
+    function confirmReset() {
         const emptyFields: Record<string, string> = {};
         measurementFields.forEach((f) => (emptyFields[f.key] = ''));
         setFields(emptyFields);
@@ -93,6 +102,8 @@ export default function CustomerMeasurementForm({
         const emptyOptions: Record<string, boolean> = {};
         designOptions.forEach((o) => (emptyOptions[o.key] = false));
         setOptions(emptyOptions);
+        setShowResetConfirm(false);
+        toast.success(isUrdu ? 'ناپ صاف کر دیے گئے' : 'Measurements cleared successfully');
     }
 
     function handlePrint() {
@@ -106,6 +117,25 @@ export default function CustomerMeasurementForm({
                 updatedAt: new Date(),
             };
             onPrint(measurement);
+        }
+    }
+
+    function handlePreview() {
+        console.log('Preview button clicked');
+        if (onPreview) {
+            console.log('Calling onPreview prop');
+            const measurement: CustomerMeasurement = {
+                id: existingId || undefined,
+                customerId,
+                fields,
+                designOptions: options,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
+            onPreview(measurement);
+        } else {
+            console.error('onPreview prop is missing');
+            toast.error('Preview feature not connected');
         }
     }
 
@@ -147,6 +177,15 @@ export default function CustomerMeasurementForm({
                     >
                         <RotateCcw className="w-4 h-4" />
                         {isUrdu ? 'ری سیٹ' : 'Reset'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handlePreview}
+                        className="btn btn-secondary text-sm flex items-center gap-2"
+                        title={isUrdu ? 'پریویو' : 'Preview'}
+                    >
+                        <Eye className="w-4 h-4" />
+                        {isUrdu ? 'پریویو' : 'Preview'}
                     </button>
                     <button
                         type="button"
@@ -375,6 +414,15 @@ export default function CustomerMeasurementForm({
                     ))}
                 </div>
             </div >
+
+            <ConfirmationModal
+                isOpen={showResetConfirm}
+                onClose={() => setShowResetConfirm(false)}
+                onConfirm={confirmReset}
+                title={isUrdu ? 'ری سیٹ کی تصدیق' : 'Reset Confirmation'}
+                message={isUrdu ? 'کیا آپ واقعی تمام ناپ صاف کرنا چاہتے ہیں؟' : 'Are you sure you want to clear all measurements?'}
+                confirmText={isUrdu ? 'ری سیٹ' : 'Reset'}
+            />
         </div >
     );
 }

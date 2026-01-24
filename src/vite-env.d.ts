@@ -7,6 +7,7 @@ interface ElectronAPI {
     printToPDF: (htmlContent: string) => Promise<{ success: boolean; path?: string; error?: string }>;
     getPrinters: () => Promise<Electron.PrinterInfo[]>;
     printSilent: (htmlContent: string, printerName: string) => Promise<{ success: boolean; error?: string }>;
+    savePDF: (htmlContent: string) => Promise<{ success: boolean; path?: string; error?: string }>;
 }
 
 declare global {

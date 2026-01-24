@@ -25,10 +25,13 @@ export const generateMeasurementSlipHTML = (
     const karigarName = workerNames?.karigar || '________';
 
     // Build measurement rows (Right Column - Primary Measurements)
-    const measurementRows = measurementFields.map(field => ({
-        label: field.labelUr,
-        value: measurement.fields[field.key] || ''
-    }));
+    // Build measurement rows (Right Column - Primary Measurements)
+    const measurementRows = measurementFields
+        .map(field => ({
+            label: field.labelUr,
+            value: measurement.fields[field.key] || ''
+        }))
+        .filter(row => row.value && row.value.trim() !== '');
 
     // Build option rows (Left Column - Design Options)
     const optionRows: { label: string; value: string }[] = [];
@@ -119,6 +122,79 @@ export const generateMeasurementSlipHTML = (
                 padding: 6mm 5mm;
                 border: none; /* No border in PDF */
             }
+            .action-bar {
+                display: none !important;
+            }
+        }
+
+        /* Action Bar at Bottom */
+        .action-bar {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 12px 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 20px;
+            z-index: 9999;
+        }
+
+        /* 3D Button Style */
+        .btn-3d {
+            border: 1px solid rgba(0,0,0,0.1);
+            border-bottom-width: 4px;
+            padding: 10px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 15px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.1s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-3d:active {
+            border-bottom-width: 1px;
+            transform: translateY(3px);
+            margin-top: 3px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .btn-3d.primary {
+            background: #0ea5e9;
+            color: white;
+            border-color: #0284c7;
+            border-bottom-color: #0369a1;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+        }
+        
+        .btn-3d.primary:hover {
+            background: #0284c7;
+        }
+
+        .btn-3d.danger {
+            background: #ef4444;
+            color: white;
+            border-color: #dc2626;
+            border-bottom-color: #b91c1c;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+        }
+        
+        .btn-3d.danger:hover {
+            background: #dc2626;
+        }
+
+        /* Adjust slip margin to account for bottom bar */
+        body {
+            padding-bottom: 100px;
         }
 
         /* ============ HEADER ============ */
@@ -272,6 +348,16 @@ export const generateMeasurementSlipHTML = (
     </style>
 </head>
 <body>
+
+<div class="action-bar">
+    <button onclick="window.opener.postMessage('save-pdf-request', '*')" class="btn-3d primary">
+        <span>💾 Save PDF</span>
+    </button>
+    <button onclick="window.close()" class="btn-3d danger">
+        <span>✖ Close</span>
+    </button>
+</div>
+
 <div class="slip">
 
     <!-- HEADER -->

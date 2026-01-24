@@ -9,9 +9,12 @@ import { Plus, ShoppingBag, Search, Calendar, Phone, Trash2, Wallet, Clock, Chec
 import PageTransition from '@/components/ui/PageTransition';
 import Skeleton from '@/components/ui/Skeleton';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
-import MeasurementPrint from '@/components/forms/MeasurementPrint';
-import { CustomerMeasurement, Order } from '@/db/database';
+
+import { Order } from '@/db/database';
 import toast from 'react-hot-toast';
+import { generateMeasurementSlipHTML } from '@/utils/printHelpers';
+import { usePrinter } from '@/hooks/usePrinter';
+
 
 export default function Orders() {
     const { t, i18n } = useTranslation();
@@ -33,26 +36,49 @@ export default function Orders() {
     const [customerMap, setCustomerMap] = useState<Record<number, Customer>>({});
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
-    // Print State
-    const [printData, setPrintData] = useState<{ customer: Customer; measurement: CustomerMeasurement; order: Order } | null>(null);
+    const { printSlip } = usePrinter();
 
-    const handlePrintClick = async (e: React.MouseEvent, order: Order) => {
-        e.preventDefault(); // Prevent navigation
+    const handleQuickPrint = async (e: React.MouseEvent, order: Order) => {
+        e.preventDefault();
+        e.stopPropagation();
 
-        try {
-            const customer = customerMap[order.customerId];
-            const measurement = await db.customerMeasurements.where('customerId').equals(order.customerId).first();
-
-            if (customer && measurement) {
-                setPrintData({ customer, measurement, order });
-            } else {
-                toast.error(t('common.error'));
-            }
-        } catch (error) {
-            console.error('Failed to prepare print data:', error);
+        const customer = customerMap[order.customerId];
+        if (!customer) {
             toast.error(t('common.error'));
+            return;
+        }
+
+        const loadingId = toast.loading(isUrdu ? 'پرنٹ لا رہا ہے...' : 'Preparing print...');
+        try {
+            const measurement = await db.customerMeasurements.where('customerId').equals(order.customerId).first();
+            if (!measurement) {
+                toast.error(isUrdu ? 'کوئی ناپ نہیں ملا' : 'No measurement found', { id: loadingId });
+                return;
+            }
+
+            const settings = await db.settings.get(1);
+            // Fetch worker names
+            const cutter = order.cutterId ? await db.workers.get(order.cutterId) : undefined;
+            const checker = order.checkerId ? await db.workers.get(order.checkerId) : undefined;
+            const karigar = order.karigarId ? await db.workers.get(order.karigarId) : undefined;
+
+            const workerNames = {
+                cutter: cutter?.name,
+                checker: checker?.name,
+                karigar: karigar?.name
+            };
+
+            const html = generateMeasurementSlipHTML(customer, measurement, settings, workerNames, order);
+            toast.dismiss(loadingId);
+            await printSlip(html, { silentOnly: true });
+
+        } catch (error) {
+            console.error('Quick Print Error:', error);
+            toast.error(t('common.error'), { id: loadingId });
         }
     };
+
+
 
     useEffect(() => {
         loadOrders();
@@ -342,12 +368,13 @@ export default function Orders() {
 
                                     <div className="flex gap-1">
                                         <button
-                                            onClick={(e) => handlePrintClick(e, order)}
-                                            className="text-slate-500 hover:text-blue-400 p-1 rounded-md hover:bg-slate-700 transition-colors"
-                                            title={t('common.printResult') || 'Print'}
+                                            onClick={(e) => handleQuickPrint(e, order)}
+                                            className="text-slate-500 hover:text-cyan-600 p-1 rounded-md hover:bg-slate-700 transition-colors"
+                                            title={t('common.print')}
                                         >
                                             <Printer className="w-4 h-4" />
                                         </button>
+
                                         <button
                                             onClick={(e) => {
                                                 e.preventDefault(); // Prevent navigation
@@ -373,15 +400,7 @@ export default function Orders() {
                 message={t('orders.deleteConfirm')}
             />
 
-            {/* Print Modal */}
-            {printData && (
-                <MeasurementPrint
-                    customer={printData.customer}
-                    measurement={printData.measurement}
-                    order={printData.order}
-                    onClose={() => setPrintData(null)}
-                />
-            )}
+
         </PageTransition>
     );
 }

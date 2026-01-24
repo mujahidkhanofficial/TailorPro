@@ -6,7 +6,8 @@ import { Upload, AlertTriangle, Download, FileSpreadsheet } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Backup() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isUrdu = i18n.language === 'ur';
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleImportBackup = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,9 +22,12 @@ export default function Backup() {
                 throw new Error('Invalid backup file');
             }
 
-            await db.transaction('rw', db.customers, db.orders, db.measurements, db.customerMeasurements, async () => {
+            await db.transaction('rw', [db.customers, db.orders, db.measurements, db.customerMeasurements, db.settings, db.workers], async () => {
                 await db.customers.bulkPut(backup.data.customers);
                 await db.orders.bulkPut(backup.data.orders);
+                if (backup.data.settings) await db.settings.bulkPut(backup.data.settings);
+                if (backup.data.workers) await db.workers.bulkPut(backup.data.workers);
+
                 // Support both legacy and new measurement tables
                 if (backup.data.customerMeasurements) {
                     await db.customerMeasurements.bulkPut(backup.data.customerMeasurements);
@@ -51,6 +55,8 @@ export default function Backup() {
                     orders: await db.orders.toArray(),
                     measurements: await db.measurements.toArray(), // Legacy (optional)
                     customerMeasurements: await db.customerMeasurements.toArray(), // New Table
+                    settings: await db.settings.toArray(),
+                    workers: await db.workers.toArray(),
                 },
             };
 
@@ -92,10 +98,18 @@ export default function Backup() {
             }, {} as Record<number, CustomerMeasurement>);
 
             // Build CSV
+            // Build CSV
             // Added measurement columns: Length, Sleeve, Bazu Center, Chest, Tera, Collar, Daman, Shalwar, Aasan, Pancha
+            // Plus Dropdowns & Designs
             const headers = [
                 'Name', 'Phone', 'Address', 'Total Orders', 'Last Order Date',
-                'Length', 'Sleeve', 'Bazu Center', 'Chest', 'Tera', 'Collar', 'Daman', 'Shalwar', 'Aasan', 'Pancha'
+                // Standard Measurements
+                'Length', 'Sleeve', 'Bazu Center', 'Chest', 'Tera', 'Collar', 'Daman', 'Shalwar', 'Aasan', 'Pancha',
+                // Dropdowns
+                'Collar Nok', 'Ban Patti', 'Cuff', 'Front Pocket', 'Side Pocket', 'Front Strip', 'Daman Style', 'Shalwar Farmaish', 'Shalwar Width',
+                // Designs
+                'Single Silai', 'Single Chamak', 'Double Chamak', 'Double Tak', 'Choka Silai', 'Sada Double', 'Label', 'Shalwar Jeb',
+                'Full Down Tera', 'Normal Tera', 'Hinger Tera', 'Sada Button', 'Fancy Button'
             ];
 
             const rows = customers.map((c: Customer) => {
@@ -105,6 +119,7 @@ export default function Backup() {
                 )[0];
 
                 const m = measurementMap[c.id!]?.fields || {};
+                const d = measurementMap[c.id!]?.designOptions || {};
 
                 return [
                     `"${c.name}"`,
@@ -123,6 +138,30 @@ export default function Backup() {
                     `"${m.shalwar || ''}"`,
                     `"${m.aasan || ''}"`,
                     `"${m.pancha || ''}"`,
+                    // Dropdowns (using raw value, could map to label if needed)
+                    `"${m.collarNok || ''}"`,
+                    `"${m.banPatti || ''}"`,
+                    `"${m.cuff || ''}"`,
+                    `"${m.frontPocket || ''}"`,
+                    `"${m.sidePocket || ''}"`,
+                    `"${m.frontStrip || ''}"`,
+                    `"${m.hemStyle || ''}"`,
+                    `"${m.shalwarFarmaish || ''}"`,
+                    `"${m.shalwarWidth || ''}"`,
+                    // Designs (Yes/No)
+                    d.singleSilai ? 'Yes' : 'No',
+                    d.singleChamakTaar ? 'Yes' : 'No',
+                    d.doubleChamakTaar ? 'Yes' : 'No',
+                    d.doubleTak ? 'Yes' : 'No',
+                    d.chokaSilai ? 'Yes' : 'No',
+                    d.sadaDouble ? 'Yes' : 'No',
+                    d.labelHo ? 'Yes' : 'No',
+                    d.shalwarJeb ? 'Yes' : 'No',
+                    d.fullDownTera ? 'Yes' : 'No',
+                    d.normalTera ? 'Yes' : 'No',
+                    d.hingerTera ? 'Yes' : 'No',
+                    d.sadaButton ? 'Yes' : 'No',
+                    d.fancyButton ? 'Yes' : 'No',
                 ].join(',');
             });
 
@@ -181,10 +220,13 @@ export default function Backup() {
 
             // Import data (merge/replace)
             // Import data (merge/replace)
-            await db.transaction('rw', db.customers, db.orders, db.measurements, db.customerMeasurements, async () => {
+            await db.transaction('rw', [db.customers, db.orders, db.measurements, db.customerMeasurements, db.settings, db.workers], async () => {
                 // Use bulkPut to update or insert
                 await db.customers.bulkPut(backup.data.customers);
                 await db.orders.bulkPut(backup.data.orders);
+                if (backup.data.settings) await db.settings.bulkPut(backup.data.settings);
+                if (backup.data.workers) await db.workers.bulkPut(backup.data.workers);
+
                 if (backup.data.customerMeasurements) {
                     await db.customerMeasurements.bulkPut(backup.data.customerMeasurements);
                 } else if (backup.data.measurements) {
@@ -196,6 +238,32 @@ export default function Backup() {
         } catch (error) {
             console.error('Import error:', error);
             toast.error(t('backup.importError') || 'Import failed');
+        }
+    };
+    const handleClearDatabase = async () => {
+        if (!confirm(isUrdu ? 'کیا آپ واقعی تمام ڈیٹا حذف کرنا چاہتے ہیں؟ یہ عمل ناقابل واپسی ہے!' : 'Are you sure you want to delete ALL data? This cannot be undone!')) {
+            return;
+        }
+
+        // Double confirmation
+        if (!confirm(isUrdu ? 'براہ کرم دوبارہ تصدیق کریں۔ سارا ڈیٹا ضائع ہو جائے گا۔' : 'Please confirm again. All data will be lost.')) {
+            return;
+        }
+
+        try {
+            await db.transaction('rw', [db.customers, db.orders, db.measurements, db.customerMeasurements, db.settings, db.workers], async () => {
+                await db.customers.clear();
+                await db.orders.clear();
+                await db.measurements.clear();
+                await db.customerMeasurements.clear();
+                await db.settings.clear();
+                await db.workers.clear();
+            });
+
+            toast.success(t('backup.clearSuccess') || 'Database cleared successfully');
+        } catch (error) {
+            console.error('Clear failed:', error);
+            toast.error('Failed to clear database');
         }
     };
 
@@ -230,6 +298,18 @@ export default function Backup() {
                 <button onClick={handleImport} className="btn btn-success w-full flex items-center justify-center gap-2">
                     <Download className="w-5 h-5" />
                     {t('backup.importBackup')}
+                </button>
+            </div>
+
+            {/* Danger Zone */}
+            <div className="card space-y-4 border-red-100 bg-red-50">
+                <h2 className="text-lg font-semibold text-red-800">{t('backup.dangerZone') || 'Danger Zone'}</h2>
+                <button
+                    onClick={handleClearDatabase}
+                    className="btn bg-red-600 text-white w-full flex items-center justify-center gap-2 hover:bg-red-700 active:bg-red-800"
+                >
+                    <AlertTriangle className="w-5 h-5" />
+                    {t('backup.clearData') || 'Clear All Data (Factory Reset)'}
                 </button>
             </div>
 

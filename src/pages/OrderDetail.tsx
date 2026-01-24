@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import { db, Customer, Order, CustomerMeasurement, OrderStatus } from '@/db/database';
 import { useOrderStore } from '@/stores/orderStore';
 import {
@@ -16,7 +17,7 @@ import {
     shalwarFarmaishOptions,
     designOptions
 } from '@/db/templates';
-import MeasurementPrint from '@/components/forms/MeasurementPrint';
+
 import { formatDate, formatDaysRemaining } from '@/utils/formatters';
 import { generateMeasurementSlipHTML } from '@/utils/printHelpers';
 import { usePrinter } from '@/hooks/usePrinter';
@@ -31,7 +32,7 @@ export default function OrderDetail() {
     const [customer, setCustomer] = useState<Customer | null>(null);
     const [customerMeasurement, setCustomerMeasurement] = useState<CustomerMeasurement | null>(null);
     const [loading, setLoading] = useState(true);
-    const [showPrintModal, setShowPrintModal] = useState(false);
+
     const { printSlip, isPrinting } = usePrinter();
 
     useEffect(() => {
@@ -71,6 +72,79 @@ export default function OrderDetail() {
         setOrder({ ...order, status: newStatus });
     };
 
+    // Listen for Save PDF request from Preview Window
+    useEffect(() => {
+        const handleMessage = async (event: MessageEvent) => {
+            if (event.data === 'save-pdf-request' && order && customer && customerMeasurement) {
+                const settings = await db.settings.get(1);
+
+                // Fetch worker names
+                const cutter = order.cutterId ? await db.workers.get(order.cutterId) : undefined;
+                const checker = order.checkerId ? await db.workers.get(order.checkerId) : undefined;
+                const karigar = order.karigarId ? await db.workers.get(order.karigarId) : undefined;
+
+                const workerNames = {
+                    cutter: cutter?.name,
+                    checker: checker?.name,
+                    karigar: karigar?.name
+                };
+
+                const html = generateMeasurementSlipHTML(customer, customerMeasurement, settings, workerNames, order);
+
+                // Use native Save PDF handler (Main Process)
+                if (window.electronAPI && window.electronAPI.savePDF) {
+                    const loadingId = toast.loading(isUrdu ? 'محفوظ کیا جا رہا ہے...' : 'Saving PDF...');
+                    try {
+                        const result = await window.electronAPI.savePDF(html);
+                        if (result.success) {
+                            toast.success(isUrdu ? 'محفوظ کرلیا گیا' : 'PDF Saved Successfully', { id: loadingId });
+                        } else if (result.error && result.error !== 'Cancelled') {
+                            toast.error(isUrdu ? 'محفوظ کرنے میں ناکامی' : 'Save Failed: ' + result.error, { id: loadingId });
+                        } else {
+                            toast.dismiss(loadingId); // Cancelled
+                        }
+                    } catch (error) {
+                        toast.error('Error saving PDF', { id: loadingId });
+                    }
+                } else {
+                    toast.error('PDF Save API not available');
+                }
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, [order, customer, customerMeasurement]);
+
+    const handlePreview = async () => {
+        if (!order || !customer || !customerMeasurement) return;
+
+        const settings = await db.settings.get(1);
+
+        // Fetch worker names
+        const cutter = order.cutterId ? await db.workers.get(order.cutterId) : undefined;
+        const checker = order.checkerId ? await db.workers.get(order.checkerId) : undefined;
+        const karigar = order.karigarId ? await db.workers.get(order.karigarId) : undefined;
+
+        const workerNames = {
+            cutter: cutter?.name,
+            checker: checker?.name,
+            karigar: karigar?.name
+        };
+
+        const html = generateMeasurementSlipHTML(customer, customerMeasurement, settings, workerNames, order);
+
+        // Open in new window
+        const win = window.open('', '_blank');
+        if (win) {
+            win.document.write(html);
+            win.document.close();
+            win.focus();
+        } else {
+            toast.error(isUrdu ? 'پاپ اپ ونڈوز بلاک ہیں' : 'Popup blocked');
+        }
+    };
+
     const handleDirectPrint = async () => {
         if (!order || !customer || !customerMeasurement) return;
 
@@ -88,7 +162,7 @@ export default function OrderDetail() {
         };
 
         const html = generateMeasurementSlipHTML(customer, customerMeasurement, settings, workerNames, order);
-        await printSlip(html);
+        await printSlip(html, { silentOnly: true });
     };
 
     // Helper to get translated field label
@@ -200,44 +274,31 @@ export default function OrderDetail() {
                                 </div>
                             </div>
 
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            {/* Print Button */}
-                            {/* Preview Button */}
-                            <button
-                                onClick={() => setShowPrintModal(true)}
-                                className="btn btn-secondary px-3 py-2 text-sm flex items-center gap-2 shadow-sm"
-                                title={isUrdu ? 'پیش نظارہ' : 'Preview'}
-                            >
-                                <Eye className="w-4 h-4" />
-                                <span className="hidden sm:inline">{isUrdu ? 'پیش نظارہ' : 'Preview'}</span>
-                            </button>
-
-                            {/* Direct Print Button */}
-                            <button
-                                onClick={handleDirectPrint}
-                                disabled={isPrinting}
-                                className="btn btn-primary px-3 py-2 text-sm flex items-center gap-2 shadow-sm"
-                                title={isUrdu ? 'پرنٹ کریں' : 'Print Slip'}
-                            >
-                                <Printer className="w-4 h-4" />
-                                <span className="hidden sm:inline">{isUrdu ? 'پرنٹ سلپ' : 'Print Slip'}</span>
-                            </button>
-
-                            {/* Status Selector */}
-                            <div className="w-full md:w-auto">
-                                <select
-                                    value={order.status}
-                                    onChange={(e) => handleStatusChange(e.target.value as OrderStatus)}
-                                    className="w-full md:w-48 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                            <div className="flex items-center gap-3">
+                                {/* Preview Button */}
+                                <button
+                                    onClick={handlePreview}
+                                    className="btn bg-cyan-600 text-white border-cyan-700 hover:bg-cyan-700 hover:border-cyan-800 px-3 py-2 text-sm flex items-center gap-2 shadow-sm"
+                                    title={isUrdu ? 'پیش نظارہ' : 'Preview'}
                                 >
-                                    {orderStatusOptions.map((option) => (
-                                        <option key={option.value} value={option.value}>
-                                            {t(option.label)}
-                                        </option>
-                                    ))}
-                                </select>
+                                    <Eye className="w-4 h-4" />
+                                    <span className="hidden sm:inline">{isUrdu ? 'پیش نظارہ' : 'Preview'}</span>
+                                </button>
+
+                                {/* Direct Print Button */}
+                                <button
+                                    onClick={handleDirectPrint}
+                                    disabled={isPrinting}
+                                    className="btn btn-primary px-3 py-2 text-sm flex items-center gap-2 shadow-sm"
+                                    title={isUrdu ? 'پرنٹ کریں' : 'Print Slip'}
+                                >
+                                    {isPrinting ? (
+                                        <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                                    ) : (
+                                        <Printer className="w-4 h-4" />
+                                    )}
+                                    <span className="hidden sm:inline">{isPrinting ? (isUrdu ? 'پرنٹ ہو رہا ہے...' : 'Printing...') : (isUrdu ? 'پرنٹ سلپ' : 'Print Slip')}</span>
+                                </button>
                             </div>
                         </div>
 
@@ -440,16 +501,7 @@ export default function OrderDetail() {
                 </div>
             </div>
 
-            {/* Print Modal */}
-            {showPrintModal && customer && customerMeasurement && order && (
-                <MeasurementPrint
-                    customer={customer}
-                    measurement={customerMeasurement}
-                    order={order}
-                    onClose={() => setShowPrintModal(false)}
-                    autoPrint={true}
-                />
-            )}
+
         </div>
     );
 }
