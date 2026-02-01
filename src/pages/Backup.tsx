@@ -7,7 +7,7 @@ import { Upload, AlertTriangle, Download, FileSpreadsheet } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Backup() {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
 
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -107,12 +107,12 @@ export default function Backup() {
             const headers = [
                 'Name', 'Phone', 'Address', 'Total Orders', 'Last Order Date',
                 // Standard Measurements
-                'Length', 'Sleeve', 'Bazu Center', 'Chest', 'Tera', 'Collar', 'Daman', 'Shalwar', 'Aasan', 'Pancha',
+                'Length', 'Sleeve', 'Gol Bazu', 'Bazu Center', 'Chest', 'Tera', 'Collar', 'Daman', 'Shalwar', 'Aasan', 'Pancha',
                 // Dropdowns
-                'Collar Nok', 'Ban Patti', 'Cuff', 'Front Pocket', 'Side Pocket', 'Front Strip', 'Daman Style', 'Shalwar Farmaish', 'Shalwar Width',
+                'Collar Nok', 'Ban Patti', 'Patti Size', 'Cuff', 'Cuff Size', 'Front Pocket', 'Side Pocket', 'Front Strip', 'Daman Style', 'Shalwar Farmaish', 'Shalwar Width',
                 // Designs
                 'Single Silai', 'Single Chamak', 'Double Chamak', 'Double Tak', 'Choka Silai', 'Sada Double', 'Label', 'Shalwar Jeb',
-                'Full Down Tera', 'Normal Tera', 'Hinger Tera', 'Sada Button', 'Fancy Button'
+                'Full Down Tera', 'Normal Tera', 'Hinger Tera', 'Sada Button', 'Fancy Button', 'Stad Kaaj Button'
             ];
 
             const rows = customers.map((c: Customer) => {
@@ -133,6 +133,7 @@ export default function Backup() {
                     // Measurements
                     `"${m.length || ''}"`,
                     `"${m.sleeve || ''}"`,
+                    `"${m.golBazu || ''}"`,
                     `"${m.bazu_center || ''}"`,
                     `"${m.chest || ''}"`,
                     `"${m.tera || ''}"`,
@@ -144,7 +145,9 @@ export default function Backup() {
                     // Dropdowns (using raw value, could map to label if needed)
                     `"${m.collarNok || ''}"`,
                     `"${m.banPatti || ''}"`,
+                    `"${m.pattiSize || ''}"`,
                     `"${m.cuff || ''}"`,
+                    `"${m.cuffSize || ''}"`,
                     `"${m.frontPocket || ''}"`,
                     `"${m.sidePocket || ''}"`,
                     `"${m.frontStrip || ''}"`,
@@ -165,6 +168,7 @@ export default function Backup() {
                     d.hingerTera ? 'Yes' : 'No',
                     d.sadaButton ? 'Yes' : 'No',
                     d.fancyButton ? 'Yes' : 'No',
+                    d.stadKaajButton ? 'Yes' : 'No',
                 ].join(',');
             });
 
@@ -307,7 +311,7 @@ export default function Backup() {
                 <h2 className="text-lg font-semibold text-red-800">{t('backup.dangerZone') || 'Danger Zone'}</h2>
                 <button
                     onClick={handleClearDatabase}
-                    className="btn bg-red-600 text-white w-full flex items-center justify-center gap-2 hover:bg-red-700 active:bg-red-800"
+                    className="btn btn-danger w-full flex items-center justify-center gap-2"
                 >
                     <AlertTriangle className="w-5 h-5" />
                     {t('backup.clearData') || 'Clear All Data (Factory Reset)'}

@@ -10,12 +10,15 @@ interface AppLayoutProps {
     children: ReactNode;
 }
 
-export default function AppLayout({ children }: AppLayoutProps) {
+import { useTranslation } from 'react-i18next';
 
+export default function AppLayout({ children }: AppLayoutProps) {
+    const { i18n } = useTranslation();
+    const isUrdu = i18n.language === 'ur';
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
-        <div className="flex h-screen bg-background overflow-hidden font-sans text-gray-900" dir="auto">
+        <div className="flex h-screen bg-background overflow-hidden font-sans text-gray-900" dir={isUrdu ? 'rtl' : 'ltr'}>
 
             <Sidebar
                 isOpen={isMobileMenuOpen}

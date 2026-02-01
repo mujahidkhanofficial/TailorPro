@@ -1,30 +1,38 @@
 import { useTranslation } from 'react-i18next';
 import { useUIStore } from '@/stores/uiStore';
 import { useState, useEffect } from 'react';
-import { Scissors, Save, Building2, Phone, MapPin, Printer, Lock } from 'lucide-react';
+import { Save, Building2, Phone, MapPin, Printer, Lock } from 'lucide-react';
 import { db, Settings as ShopSettings } from '@/db/database';
 import toast from 'react-hot-toast';
-
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import PageTransition from '@/components/ui/PageTransition';
 
 export default function Settings() {
     const { t, i18n } = useTranslation();
     const { language, setLanguage } = useUIStore();
-    const [appVersion, setAppVersion] = useState<string>('');
-    const [availablePrinters, setAvailablePrinters] = useState<any[]>([]);
     const isUrdu = i18n.language === 'ur';
 
-    // Password Change State
-    const [currentPassword, setCurrentPassword] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
+    const [appVersion, setAppVersion] = useState<string>('');
+    const [availablePrinters, setAvailablePrinters] = useState<any[]>([]);
+
+    // Shop Settings State
     const [settings, setSettings] = useState<ShopSettings>({
         shopName: 'M.R.S ٹیلرز اینڈ فیبرکس',
         address: 'گل پلازہ روڈ اپوزٹ ٹاؤن شیل مارکیٹ تارو جب',
         phone1: '0313-9003733',
         phone2: '0313-9645010',
+        appTitle: 'Tailor Pro',
         updatedAt: new Date()
     });
+
+    // Password Change State
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+
+    // Title Change Verification
+    const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
+    const [pendingTitle, setPendingTitle] = useState('');
 
     useEffect(() => {
         // Load App Version
@@ -33,7 +41,6 @@ export default function Settings() {
             window.electronAPI.getPrinters().then(setAvailablePrinters);
         }
 
-        // Load Shop Settings
         // Load Shop Settings
         const loadSettings = async () => {
             const savedSettings = await db.settings.toCollection().first();
@@ -49,38 +56,59 @@ export default function Settings() {
         i18n.changeLanguage(lang);
     };
 
-    const handleSaveSettings = async () => {
+    const saveToDb = async (data: ShopSettings) => {
         try {
             const existing = await db.settings.toCollection().first();
             const id = existing?.id || 1;
-            // Ensure we don't overwrite password with empty/stale state if we have it in DB
-            // But if settings state has a password (loaded or updated), use it.
-            // Best safety: Merge existing password if current settings state doesn't have one? 
-            // Actually, since we will fix handleChangePassword to update state, settings.password should be correct.
-            // But let's be safe: preserve existing password if not explicitly changing it via this form? 
-            // This form doesn't have password input. So we should use existing.password from DB unless settings already has it.
-
-            const passwordToSave = settings.password || existing?.password;
-            const finalSettings = { ...settings, id, password: passwordToSave, updatedAt: new Date() };
+            const passwordToSave = data.password || existing?.password;
+            const finalSettings = { ...data, id, password: passwordToSave, updatedAt: new Date() };
 
             await db.settings.put(finalSettings);
-            // Update local state to match full object
             setSettings(finalSettings);
-            toast.success('Settings saved successfully');
+
+            // Broadcast event for Sidebar to update immediately
+            window.dispatchEvent(new Event('settings-updated'));
+
+            toast.success(t('settings.saved'));
         } catch (error) {
             console.error(error);
-            toast.error('Failed to save settings');
+            toast.error(t('settings.saveError'));
         }
+    };
+
+    const handleSaveSettings = async () => {
+        try {
+            const existing = await db.settings.toCollection().first();
+
+            // Check if title changed
+            if (settings.appTitle !== existing?.appTitle) {
+                setPendingTitle(settings.appTitle || 'Tailor Pro');
+                setIsTitleModalOpen(true);
+                return; // Stop here, wait for modal
+            }
+
+            saveToDb(settings);
+        } catch (error) {
+            console.error(error);
+            toast.error(t('settings.saveError'));
+        }
+    };
+
+    const confirmTitleChange = async () => {
+        // Validation logic for password is handled inside ConfirmationModal via requirePassword
+        // If we reach here, password was correct
+        await saveToDb({ ...settings, appTitle: pendingTitle });
+        setIsTitleModalOpen(false);
     };
 
     const handleChangePassword = async () => {
         if (!currentPassword || !newPassword || !confirmPassword) {
-            toast.error(isUrdu ? 'تمام خانے پر کریں' : 'Please fill all fields');
+            toast.error(t('settings.fillAll'));
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            toast.error(isUrdu ? 'نئے پاس ورڈ میچ نہیں کر رہے' : 'New passwords do not match');
+            toast.error(t('settings.passwordMismatch'));
             return;
         }
 
@@ -89,33 +117,41 @@ export default function Settings() {
             const actualCurrentPassword = savedSettings?.password || 'admin123';
 
             if (currentPassword !== actualCurrentPassword) {
-                toast.error(isUrdu ? 'موجودہ پاس ورڈ غلط ہے' : 'Incorrect current password');
+                toast.error(t('settings.incorrectPassword'));
                 return;
             }
 
-            // Create new settings object if none exists, preserving other fields
-            const id = savedSettings?.id || 1;
-            const newSettings: ShopSettings = {
-                ...(savedSettings || settings), // Use saved or local state default
-                id,
-                password: newPassword,
-                updatedAt: new Date()
-            };
+            // Robust Save Logic:
+            if (savedSettings && savedSettings.id) {
+                // Update existing
+                console.log('🔐 Updating existing settings ID:', savedSettings.id);
+                await db.settings.update(savedSettings.id, {
+                    password: newPassword,
+                    updatedAt: new Date()
+                });
+                // Update local state by merging
+                setSettings({ ...savedSettings, password: newPassword, updatedAt: new Date() });
+            } else {
+                // Create new
+                console.log('🔐 Creating new settings record');
+                const newSettings: ShopSettings = {
+                    ...settings, // Use current form state
+                    password: newPassword,
+                    updatedAt: new Date()
+                };
+                // Ensure we don't pass an undefined ID if it's auto-increment
+                const id = await db.settings.add(newSettings);
+                setSettings({ ...newSettings, id });
+            }
 
-            await db.settings.put(newSettings);
+            toast.success(t('settings.passwordChanged'));
 
-            // CRITICAL: Update local state so subsequent saves don't revert password
-            setSettings(newSettings);
-
-            toast.success(isUrdu ? 'پاس ورڈ تبدیل کر دیا گیا' : 'Password changed successfully');
-
-            // Clear fields
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
         } catch (error) {
             console.error('Password change error:', error);
-            toast.error('Failed to change password');
+            toast.error(t('settings.changeError'));
         }
     };
 
@@ -128,20 +164,41 @@ export default function Settings() {
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-semibold flex items-center gap-2">
                         <Building2 className="w-5 h-5" />
-                        Shop Details (Print Header)
+                        {t('settings.shopDetails')}
                     </h2>
                     <button
                         onClick={handleSaveSettings}
                         className="btn btn-primary flex items-center gap-2 text-sm py-1.5"
                     >
                         <Save className="w-4 h-4" />
-                        Save Changes
+                        {t('settings.saveChanges')}
                     </button>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
+                    {/* App Title Input */}
+                    <div className="col-span-2 space-y-2">
+                        <label className="label">
+                            {isUrdu ? 'ایپ کا ٹائٹل (نیا نام)' : 'App Title (Sidebar Name)'}
+                            <span className="text-xs text-gray-500 ml-2 font-normal">
+                                {isUrdu ? '(زیادہ سے زیادہ 15 الفاظ)' : '(Max 15 characters)'}
+                            </span>
+                        </label>
+                        <input
+                            type="text"
+                            className="input font-bold text-primary-600"
+                            value={settings.appTitle || ''}
+                            onChange={(e) => {
+                                if (e.target.value.length <= 15) {
+                                    setSettings({ ...settings, appTitle: e.target.value })
+                                }
+                            }}
+                            placeholder="Tailor Pro"
+                        />
+                    </div>
+
                     <div className="col-span-2">
-                        <label className="label">Shop Name (Urdu/English)</label>
+                        <label className="label">{t('settings.shopName')}</label>
                         <input
                             type="text"
                             className="input font-urdu"
@@ -152,7 +209,7 @@ export default function Settings() {
                     </div>
 
                     <div className="col-span-2">
-                        <label className="label">Address (Urdu/English)</label>
+                        <label className="label">{t('settings.address')}</label>
                         <div className="relative">
                             <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                             <input
@@ -166,7 +223,7 @@ export default function Settings() {
                     </div>
 
                     <div>
-                        <label className="label">Phone 1</label>
+                        <label className="label">{t('settings.phone1')}</label>
                         <div className="relative">
                             <Phone className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                             <input
@@ -179,7 +236,7 @@ export default function Settings() {
                     </div>
 
                     <div>
-                        <label className="label">Phone 2 (Optional)</label>
+                        <label className="label">{t('settings.phone2')}</label>
                         <div className="relative">
                             <Phone className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                             <input
@@ -194,22 +251,22 @@ export default function Settings() {
             </div>
 
             {/* Printer Settings */}
-            < div className="card" >
+            <div className="card">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-semibold flex items-center gap-2">
                         <Printer className="w-5 h-5" />
-                        Printer Settings
+                        {t('settings.printerSettings')}
                     </h2>
                 </div>
                 <div className="space-y-4">
                     <div>
-                        <label className="label">Default Printer</label>
+                        <label className="label">{t('settings.defaultPrinter')}</label>
                         <select
                             className="input"
                             value={settings.defaultPrinter || ''}
                             onChange={(e) => setSettings({ ...settings, defaultPrinter: e.target.value })}
                         >
-                            <option value="">Select a printer...</option>
+                            <option value="">{t('settings.selectPrinter')}</option>
                             {availablePrinters.map((p) => (
                                 <option key={p.name} value={p.name}>
                                     {p.name}
@@ -217,14 +274,14 @@ export default function Settings() {
                             ))}
                         </select>
                         <p className="text-xs text-gray-500 mt-1">
-                            {isUrdu ? 'منتخب کردہ پرنٹر پر رسیدیں خود بخود پرنٹ ہوں گی۔' : 'Receipts will automatically print to this printer.'}
+                            {t('settings.printerHint')}
                         </p>
                     </div>
                 </div>
-            </div >
+            </div>
 
             {/* Language Selection */}
-            < div className="card" >
+            <div className="card">
                 <h2 className="text-lg font-semibold mb-4">{t('settings.language')}</h2>
                 <div className="flex gap-4">
                     <button
@@ -249,16 +306,16 @@ export default function Settings() {
                         <span className="font-urdu font-medium">اردو</span>
                     </button>
                 </div>
-            </div >
+            </div>
 
             {/* About Section */}
-            < div className="card" >
+            <div className="card">
                 <h2 className="text-lg font-semibold mb-4">{t('settings.about')}</h2>
 
                 <div className="space-y-4">
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-200">
-                            <Scissors className="w-8 h-8 text-white" />
+                        <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-900/20 p-2">
+                            <img src="logo.png" alt="Logo" className="w-full h-full object-contain" />
                         </div>
                         <div>
                             <h3 className="text-xl font-bold">{t('app.name')}</h3>
@@ -271,26 +328,27 @@ export default function Settings() {
                         <span className="font-semibold text-gray-900">v{appVersion || '1.0.0'}</span>
                     </div>
                 </div>
-            </div >
+            </div>
+
             {/* Security Settings */}
             <div className="card">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-semibold flex items-center gap-2">
                         <Lock className="w-5 h-5" />
-                        {isUrdu ? 'سیکیورٹی سیٹنگز' : 'Security Settings'}
+                        {t('settings.securitySettings')}
                     </h2>
                     <button
                         onClick={handleChangePassword}
                         className="btn btn-primary flex items-center gap-2 text-sm py-1.5"
                     >
                         <Save className="w-4 h-4" />
-                        {isUrdu ? 'پاس ورڈ تبدیل کریں' : 'Change Password'}
+                        {t('settings.changePassword')}
                     </button>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
                     <div>
-                        <label className="label">{isUrdu ? 'موجودہ پاس ورڈ' : 'Current Password'}</label>
+                        <label className="label">{t('settings.currentPassword')}</label>
                         <input
                             type="password"
                             className="input"
@@ -300,7 +358,7 @@ export default function Settings() {
                         />
                     </div>
                     <div>
-                        <label className="label">{isUrdu ? 'نیا پاس ورڈ' : 'New Password'}</label>
+                        <label className="label">{t('settings.newPassword')}</label>
                         <input
                             type="password"
                             className="input"
@@ -310,7 +368,7 @@ export default function Settings() {
                         />
                     </div>
                     <div>
-                        <label className="label">{isUrdu ? 'نئے پاس ورڈ کی تصدیق' : 'Confirm New Password'}</label>
+                        <label className="label">{t('settings.confirmPassword')}</label>
                         <input
                             type="password"
                             className="input"
@@ -322,6 +380,17 @@ export default function Settings() {
                 </div>
             </div>
 
-        </PageTransition >
+            {/* Confirmation Modal for Title Change */}
+            <ConfirmationModal
+                isOpen={isTitleModalOpen}
+                onClose={() => setIsTitleModalOpen(false)}
+                onConfirm={confirmTitleChange}
+                title={isUrdu ? 'نام کی تبدیلی کی تصدیق' : 'Confirm Title Change'}
+                message={isUrdu ? 'براہ کرم ایپ کا نام تبدیل کرنے کے لیے اپنا پاس ورڈ درج کریں۔' : 'Please enter your password to change the App Title.'}
+                confirmText={isUrdu ? 'ٹیبلیڈ کریں' : 'Update Title'}
+                requirePassword={true}
+            />
+
+        </PageTransition>
     );
 }

@@ -30,6 +30,7 @@ export interface Order {
     status: OrderStatus;
     dueDate: Date;
     advancePayment?: string;
+    suitsCount?: number;
     deliveryNotes?: string;
     cutterId?: number;
     checkerId?: number;
@@ -62,6 +63,7 @@ export interface Settings {
     phone1: string;
     phone2: string;
     defaultPrinter?: string;
+    appTitle?: string; // Custom app title in sidebar
     password?: string; // For admin login
     updatedAt: Date;
 }

@@ -13,6 +13,8 @@ export default defineConfig({
     build: {
         outDir: 'dist',
         emptyOutDir: true,
+        sourcemap: false, // Disable sourcemaps for production
+        target: 'esnext', // Use modern JS
     },
     server: {
         port: 5173,

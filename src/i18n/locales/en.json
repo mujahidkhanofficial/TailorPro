@@ -10,7 +10,8 @@
         "workers": "Workers",
         "backup": "Backup",
         "settings": "Settings",
-        "logout": "Logout"
+        "logout": "Logout",
+        "karigarProgress": "Karigar Progress"
     },
     "dashboard": {
         "title": "Dashboard",
@@ -58,7 +59,8 @@
         "statusDelivered": "Delivered",
         "statusCompleted": "Completed",
         "notesPlaceholder": "Any special instructions...",
-        "paymentPlaceholder": "Rs."
+        "paymentPlaceholder": "Rs.",
+        "suitsQuantity": "Number of Suits"
     },
     "workers": {
         "title": "Workers",
@@ -124,7 +126,29 @@
         "title": "Settings",
         "language": "Language",
         "about": "About",
-        "version": "Version"
+        "version": "Version",
+        "shopDetails": "Shop Details (Print Header)",
+        "saveChanges": "Save Changes",
+        "shopName": "Shop Name (Urdu/English)",
+        "address": "Address (Urdu/English)",
+        "phone1": "Phone 1",
+        "phone2": "Phone 2 (Optional)",
+        "printerSettings": "Printer Settings",
+        "defaultPrinter": "Default Printer",
+        "selectPrinter": "Select a printer...",
+        "printerHint": "Receipts will automatically print to this printer.",
+        "securitySettings": "Security Settings",
+        "changePassword": "Change Password",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm New Password",
+        "fillAll": "Please fill all fields",
+        "passwordMismatch": "New passwords do not match",
+        "incorrectPassword": "Incorrect current password",
+        "passwordChanged": "Password changed successfully",
+        "saved": "Settings saved successfully",
+        "saveError": "Failed to save settings",
+        "changeError": "Failed to change password"
     },
     "common": {
         "save": "Save",

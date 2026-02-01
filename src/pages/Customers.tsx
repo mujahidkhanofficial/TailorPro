@@ -85,13 +85,7 @@ export default function Customers() {
                     {t('customers.title')} <span className="text-gray-500 text-lg font-medium">({customers.length})</span>
                 </h1>
                 <div className="flex gap-2">
-                    <button onClick={async () => {
-                        const { seedCustomers } = await import('@/db/seed');
-                        await seedCustomers(30);
-                        window.location.reload();
-                    }} className="btn btn-secondary flex items-center gap-2">
-                        + Mock Data
-                    </button>
+
                     <button onClick={handleAddNew} className="btn btn-primary flex items-center gap-2">
                         <Plus className="w-5 h-5" />
                         {t('customers.addNew')}

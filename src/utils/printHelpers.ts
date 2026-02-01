@@ -1,6 +1,7 @@
-import { Customer, CustomerMeasurement, Settings, Order } from '@/db/database';
-import { measurementFields, designOptions, collarNokOptions, banPattiOptions, cuffOptions, frontPocketOptions, sidePocketOptions, frontStripOptions, hemStyleOptions, shalwarFarmaishOptions } from '@/db/templates';
+import { Customer, CustomerMeasurement, Settings, Order, Worker } from '@/db/database';
+import { designOptions, collarNokOptions, banPattiOptions, cuffOptions, frontPocketOptions, sidePocketOptions, frontStripOptions, hemStyleOptions, shalwarFarmaishOptions } from '@/db/templates';
 import { formatDate } from '@/utils/formatters';
+import { formatMeasurementDisplay } from '@/utils/fractionUtils';
 
 export const generateMeasurementSlipHTML = (
     customer: Customer,
@@ -25,38 +26,66 @@ export const generateMeasurementSlipHTML = (
     const karigarName = workerNames?.karigar || '________';
 
     // Build measurement rows (Right Column - Primary Measurements)
-    // Build measurement rows (Right Column - Primary Measurements)
-    const measurementRows = measurementFields
-        .map(field => ({
-            label: field.labelUr,
-            value: measurement.fields[field.key] || ''
-        }))
-        .filter(row => row.value && row.value.trim() !== '');
+    // Unified Field Order (Matching CustomerMeasurementForm.tsx)
+    const fieldOrder = [
+        { key: 'length', label: 'لمبائی', type: 'meas' },
+        { key: 'sleeve', label: 'آستین', type: 'meas' },
+        { key: 'bazu_center', label: 'بازو سینٹر', type: 'meas' },
+        { key: 'chest', label: 'چھاتی', type: 'meas' },
+        { key: 'tera', label: 'تیرا', type: 'meas' },
+        { key: 'kalar', label: 'کالر', type: 'meas' },
+        { key: 'daaman', label: 'دامن سائز', type: 'meas' },
+        { key: 'golBazu', label: 'گول بازو', type: 'meas' },
+        { key: 'collarNok', label: 'کالر نوک', type: 'opt', options: collarNokOptions },
+        { key: 'banPatti', label: 'بین پٹی', type: 'opt', options: banPattiOptions },
+        { key: 'pattiSize', label: 'پٹی سائز', type: 'meas' },
+        { key: 'cuff', label: 'کف', type: 'opt', options: cuffOptions },
+        { key: 'cuffSize', label: 'کف سائز', type: 'meas' },
+        { key: 'frontPocket', label: 'سامنے جیب', type: 'opt', options: frontPocketOptions },
+        { key: 'sidePocket', label: 'سائیڈ جیب', type: 'opt', options: sidePocketOptions },
+        { key: 'frontStrip', label: 'سامنے کی پٹی', type: 'opt', options: frontStripOptions },
+        { key: 'hemStyle', label: 'دامن فرمائش', type: 'opt', options: hemStyleOptions },
+        { key: 'shalwar', label: 'شلوار', type: 'meas' },
+        { key: 'aasan', label: 'آسن', type: 'meas' },
+        { key: 'pancha', label: 'پانچہ', type: 'meas' },
+        { key: 'shalwarFarmaish', label: 'شلوار فرمائش', type: 'opt', options: shalwarFarmaishOptions },
+        { key: 'shalwarWidth', label: 'شلوار چوڑائی', type: 'meas' },
+    ];
 
-    // Build option rows (Left Column - Design Options)
-    const optionRows: { label: string; value: string }[] = [];
-    if (measurement.fields['collarNok']) optionRows.push({ label: 'کالر نوک', value: getOptionLabel(collarNokOptions, measurement.fields['collarNok']) });
-    if (measurement.fields['banPatti']) optionRows.push({ label: 'بین پٹی', value: getOptionLabel(banPattiOptions, measurement.fields['banPatti']) });
-    if (measurement.fields['cuff']) optionRows.push({ label: 'کف', value: getOptionLabel(cuffOptions, measurement.fields['cuff']) });
-    if (measurement.fields['frontPocket']) optionRows.push({ label: 'سامنے جیب', value: getOptionLabel(frontPocketOptions, measurement.fields['frontPocket']) });
-    if (measurement.fields['sidePocket']) optionRows.push({ label: 'سائیڈ جیب', value: getOptionLabel(sidePocketOptions, measurement.fields['sidePocket']) });
-    if (measurement.fields['frontStrip']) optionRows.push({ label: 'سامنے کی پٹی', value: getOptionLabel(frontStripOptions, measurement.fields['frontStrip']) });
-    if (measurement.fields['hemStyle']) optionRows.push({ label: 'دامن', value: getOptionLabel(hemStyleOptions, measurement.fields['hemStyle']) });
-    if (measurement.fields['shalwarFarmaish']) optionRows.push({ label: 'شلوار', value: getOptionLabel(shalwarFarmaishOptions, measurement.fields['shalwarFarmaish']) });
+    // Build unified list of visible rows
+    const allRows = fieldOrder.map(field => {
+        let value = '';
+        let className = 'num'; // Default to numeric style (LTR)
 
-    // Merge into rows for a unified table
-    // RTL Order: Measurement Label (right) | Measurement Value | Option Label | Option Value (left)
-    const maxRows = Math.max(measurementRows.length, optionRows.length);
+        if (field.type === 'opt') {
+            value = getOptionLabel(field.options || [], measurement.fields[field.key] || '');
+            className = 'val'; // Text style (RTL)
+        } else {
+            value = formatMeasurementDisplay(measurement.fields[field.key] || '');
+        }
+
+        if (!value || value.trim() === '') return null;
+
+        return { label: field.label, value, className };
+    }).filter((row): row is { label: string; value: string; className: string } => row !== null);
+
+    // Generate table rows (2 columns per row)
     let tableBodyHTML = '';
-    for (let i = 0; i < maxRows; i++) {
-        const m = measurementRows[i] || { label: '', value: '' };
-        const o = optionRows[i] || { label: '', value: '' };
+    for (let i = 0; i < allRows.length; i += 2) {
+        const item1 = allRows[i];
+        const item2 = allRows[i + 1];
+
         tableBodyHTML += `
             <tr>
-                <td class="lbl">${m.label}</td>
-                <td class="num">${m.value}</td>
-                <td class="lbl">${o.label}</td>
-                <td class="val">${o.value}</td>
+                <td class="lbl">${item1.label}</td>
+                <td class="${item1.className}">${item1.value}</td>
+                
+                ${item2 ? `
+                    <td class="lbl">${item2.label}</td>
+                    <td class="${item2.className}">${item2.value}</td>
+                ` : `
+                    <td></td><td></td>
+                `}
             </tr>
         `;
     }
@@ -413,6 +442,296 @@ export const generateMeasurementSlipHTML = (
     ` : ''}
 
 </div>
+</body>
+</html>
+    `;
+};
+
+export const generateKarigarReportHTML = (
+    worker: Worker,
+    orders: (Order & { customerName: string, designSpecsEn: string[], designSpecsUr: string[] })[],
+    dateRange: { start: Date; end: Date }
+): string => {
+
+    const formatDate = (date: Date) => {
+        return new Date(date).toLocaleDateString('en-GB'); // DD/MM/YYYY
+    };
+
+    // Calculate suit counts per customer
+    const customerCounts: Record<string, number> = {};
+    orders.forEach(o => {
+        customerCounts[o.customerName] = (customerCounts[o.customerName] || 0) + 1;
+    });
+
+    let tableRows = '';
+    orders.forEach(order => {
+        // Use Urdu specs if available
+        const specsToUse = order.designSpecsUr && order.designSpecsUr.length > 0
+            ? order.designSpecsUr
+            : order.designSpecsEn; // Fallback
+
+        const specs = specsToUse.length > 0
+            ? specsToUse.join('، ')
+            : '-';
+
+        // Translate status
+        const statusMap: Record<string, string> = {
+            'new': 'نیا',
+            'in_progress': 'جاری ہے',
+            'ready': 'تیار',
+            'delivered': 'پہنچا',
+            'completed': 'مکمل'
+        };
+        const statusUr = statusMap[order.status] || order.status;
+
+        // Count for this customer
+        // Use suit count from order, default to 1
+        const count = order.suitsCount || 1;
+
+        tableRows += `
+            <tr>
+                <td style="text-align: center;">${formatDate(order.createdAt)}</td>
+                <td style="text-align: center;">${order.id}</td>
+                <td>
+                    <div style="font-weight: bold;">${order.customerName}</div>
+                </td>
+                <td style="text-align: center; font-weight: bold;">${count}</td>
+                <td>${specs}</td>
+                <td style="text-align: center;">
+                    <span class="status-badge ${order.status}">${statusUr}</span>
+                </td>
+            </tr>
+        `;
+    });
+
+    const totalSuits = orders.reduce((sum, o) => sum + (o.suitsCount || 1), 0);
+
+    return `
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+    <meta charset="UTF-8">
+    <title>Karigar Report - ${worker.name}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Nastaliq Urdu', serif;
+            direction: rtl;
+            background: #fff;
+            padding: 10px;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        .shop-name { font-size: 24px; font-weight: bold; margin-bottom: 2px; }
+        .shop-info { font-size: 12px; color: #555; }
+        
+        .report-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: #f0f0f0;
+            padding: 5px;
+            border-radius: 6px;
+        }
+
+        .meta-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px; /* Dense font */
+        }
+        
+        th, td {
+            border: 1px solid #ccc;
+            padding: 4px; /* Dense padding */
+            vertical-align: middle;
+        }
+
+        th {
+            background: #f9f9f9;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px dashed #ccc;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            font-size: 11px;
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+        .status-badge.completed { background: #dcfce7; color: #166534; }
+        .status-badge.delivered { background: #f3f4f6; color: #374151; }
+        .status-badge.new { background: #dbeafe; color: #1e40af; }
+        .status-badge.in_progress { background: #fef9c3; color: #854d0e; }
+
+        .action-bar {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 12px 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 20px;
+            z-index: 9999;
+        }
+
+        .btn-3d {
+            border: 1px solid rgba(0,0,0,0.1);
+            border-bottom-width: 4px;
+            padding: 10px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 15px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.1s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-3d:active {
+            border-bottom-width: 1px;
+            transform: translateY(3px);
+            margin-top: 3px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .btn-3d.primary {
+            background: #0ea5e9;
+            color: white;
+            border-color: #0284c7;
+            border-bottom-color: #0369a1;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+        }
+        
+        .btn-3d.primary:hover {
+            background: #0284c7;
+        }
+
+        .btn-3d.danger {
+            background: #ef4444;
+            color: white;
+            border-color: #dc2626;
+            border-bottom-color: #b91c1c;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+        }
+        
+        .btn-3d.danger:hover {
+            background: #dc2626;
+        }
+
+        /* Page Container - A5 Portrait */
+        .slip {
+            width: 148mm;
+            min-height: 210mm;
+            margin: 10mm auto;
+            padding: 8mm 6mm; /* Slightly tighter padding for A5 */
+            background: #fff;
+            border: 3px dashed #c00; /* Red Border for Preview */
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        @page {
+            size: A5 portrait; /* Explicit A5 */
+            margin: 0;
+        }
+
+        @media print {
+            body { 
+                background: #fff; 
+                margin: 0;
+            }
+            .slip {
+                width: 100%;
+                min-height: auto;
+                margin: 0;
+                padding: 10mm;
+                border: none; /* No border in PDF */
+                box-shadow: none;
+            }
+            .action-bar { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="action-bar">
+        <button onclick="window.print()" class="btn-3d primary">
+            <span>Print Report</span>
+        </button>
+        <button onclick="window.close()" class="btn-3d danger">
+            <span>Close</span>
+        </button>
+    </div>
+
+    <div class="slip">
+
+        <div class="report-title">
+            کاریگر ہفتہ وار رپورٹ
+        </div>
+
+        <div class="meta-info">
+            <div>کاریگر کا نام: <span style="font-size: 16px; color: #0284c7;">${worker.name}</span></div>
+            <div style="direction: ltr;">
+                ${formatDate(dateRange.start)} - ${formatDate(dateRange.end)}
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th width="12%">تاریخ</th>
+                    <th width="8%">آرڈر #</th>
+                    <th width="20%">کسٹمر</th>
+                    <th width="8%">کل سوٹ</th>
+                    <th width="37%">ڈیزائن / فرمائش</th>
+                    <th width="15%">اسٹیٹس</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tableRows}
+            </tbody>
+        </table>
+
+        <div style="margin-top: 15px; text-align: left; font-weight: bold; font-size: 15px;">
+            ٹوٹل جوڑے: ${totalSuits}
+        </div>
+
+        <div class="footer">
+            <div>دستخط کاریگر: _________________</div>
+            <div>دستخط منیجر: _________________</div>
+        </div>
+    
+    </div>
+
 </body>
 </html>
     `;

@@ -13,6 +13,7 @@ import Workers from '@/pages/Workers';
 import Backup from '@/pages/Backup';
 import Settings from '@/pages/Settings';
 import Login from '@/pages/Login';
+import KarigarProgress from '@/pages/KarigarProgress';
 import { useAuthStore } from '@/stores/authStore';
 import { Navigate, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -51,6 +52,7 @@ function App() {
                     <Route path="/orders/create" element={<CreateOrder />} />
                     <Route path="/orders/:id" element={<OrderDetail />} />
                     <Route path="/workers" element={<Workers />} />
+                    <Route path="/karigar-progress" element={<KarigarProgress />} />
                     <Route path="/backup" element={<Backup />} />
                     <Route path="/settings" element={<Settings />} />
                 </Route>

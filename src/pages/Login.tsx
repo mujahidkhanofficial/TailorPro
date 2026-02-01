@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { db } from '@/db/database';
 import { useAuthStore } from '@/stores/authStore';
-import { Scissors, Lock, ArrowRight } from 'lucide-react';
+import { Lock, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Login() {
@@ -44,6 +44,12 @@ export default function Login() {
 
             // 3. Check password
             const correctPassword = activeSettings?.password || 'admin123';
+            console.log('🔐 Login Check:', {
+                storedSettingsId: activeSettings?.id,
+                hasStoredPassword: !!activeSettings?.password,
+                usingDefault: !activeSettings?.password,
+                inputPasswordLength: password.length
+            });
 
             if (password === correctPassword) {
                 login();
@@ -65,8 +71,8 @@ export default function Login() {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
                 {/* Header */}
                 <div className="bg-primary-600 p-8 text-center text-white">
-                    <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-                        <Scissors className="w-8 h-8 text-white" />
+                    <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 p-3">
+                        <img src="logo.png" alt="TailorPro Logo" className="w-full h-full object-contain" />
                     </div>
                     <h1 className="text-2xl font-bold mb-1">TailorPro</h1>
                     <p className="text-primary-100 text-sm">Professional Tailoring Management</p>

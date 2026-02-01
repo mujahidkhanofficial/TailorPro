@@ -60,8 +60,16 @@ export function getDaysRemaining(dueDate: Date | string): number {
 }
 
 // Format days remaining as user-friendly text
-export function formatDaysRemaining(dueDate: Date | string, isUrdu: boolean = false): { text: string; color: string } {
+export function formatDaysRemaining(dueDate: Date | string, isUrdu: boolean = false, status?: string): { text: string; color: string } {
     const days = getDaysRemaining(dueDate);
+
+    // If order is completed/delivered, don't show overdue/days left
+    if (status && ['completed', 'delivered'].includes(status.toLowerCase())) {
+        return {
+            text: '',
+            color: ''
+        };
+    }
 
     if (days < 0) {
         const absDays = Math.abs(days);

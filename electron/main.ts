@@ -14,7 +14,7 @@ function createWindow(): void {
         minWidth: 1024,
         minHeight: 768,
         title: 'Tailor Pro',
-        icon: path.join(__dirname, '../assets/icon.ico'),
+        icon: path.join(__dirname, '../public/icon.png'),
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -41,6 +41,7 @@ function createWindow(): void {
 }
 
 // App lifecycle
+app.disableHardwareAcceleration(); // Disable GPU acceleration for performance/compatibility
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
@@ -149,7 +150,7 @@ ipcMain.handle('print-to-pdf', async (_event, htmlContent: string) => {
             width: 600,
             height: 900,
             title: 'Print Preview',
-            icon: path.join(__dirname, '../assets/icon.ico'),
+            icon: path.join(__dirname, '../public/icon.png'),
             autoHideMenuBar: true,
             webPreferences: {
                 nodeIntegration: false,

@@ -6,7 +6,7 @@ import { db, Customer, Order, CustomerMeasurement, OrderStatus } from '@/db/data
 import { useOrderStore } from '@/stores/orderStore';
 import {
     orderStatusOptions,
-    measurementFields,
+
     collarNokOptions,
     banPattiOptions,
     cuffOptions,
@@ -20,6 +20,7 @@ import {
 
 import { formatDate, formatDaysRemaining } from '@/utils/formatters';
 import { generateMeasurementSlipHTML } from '@/utils/printHelpers';
+import { formatMeasurementDisplay } from '@/utils/fractionUtils';
 import { usePrinter } from '@/hooks/usePrinter';
 import { Calendar, User, Phone, FileText, Banknote, ArrowRight, ArrowLeft, Scissors, Check, Printer, Eye } from 'lucide-react';
 
@@ -165,57 +166,7 @@ export default function OrderDetail() {
         await printSlip(html, { silentOnly: true });
     };
 
-    // Helper to get translated field label
-    const getFieldLabel = (key: string) => {
-        // Check standard fields
-        const field = measurementFields.find(f => f.key === key);
-        if (field) return isUrdu ? field.labelUr : field.labelEn;
 
-        // Check custom fields
-        const customLabels: Record<string, { en: string; ur: string }> = {
-            collarNok: { en: 'Collar Nok', ur: 'کالر نوک' },
-            banPatti: { en: 'Ban Patti', ur: 'بین پٹی' },
-            cuff: { en: 'Cuff', ur: 'کف' },
-            frontPocket: { en: 'Front Pocket', ur: 'سامنے جیب' },
-            sidePocket: { en: 'Side Pocket', ur: 'سائیڈ جیب' },
-            frontStrip: { en: 'Front Strip', ur: 'سامنے کی پٹی' },
-            hemStyle: { en: 'Daman', ur: 'دامن' },
-            shalwarFarmaish: { en: 'Shalwar Farmaish', ur: 'شلوار فرمائش' },
-            shalwarWidth: { en: 'Shalwar Width', ur: 'شلوار چوڑائی' },
-            aasan: { en: 'Aasan', ur: 'آسن' },
-            bazuCenter: { en: 'Bazu Center', ur: 'بازو سینٹر' },
-        };
-
-        if (customLabels[key]) {
-            return isUrdu ? customLabels[key].ur : customLabels[key].en;
-        }
-
-        // Fallback to translation key or raw key
-        return t(`measurements.${key}`) !== `measurements.${key}` ? t(`measurements.${key}`) : key;
-    };
-
-    // Helper to get translated value for dropdowns
-    const getFieldValue = (key: string, value: string) => {
-        let options: { value: string; labelEn: string; labelUr: string }[] = [];
-
-        switch (key) {
-            case 'collarNok': options = collarNokOptions; break;
-            case 'banPatti': options = banPattiOptions; break;
-            case 'cuff': options = cuffOptions; break;
-            case 'frontPocket': options = frontPocketOptions; break;
-            case 'sidePocket': options = sidePocketOptions; break;
-            case 'frontStrip': options = frontStripOptions; break;
-            case 'hemStyle': options = hemStyleOptions; break;
-            case 'shalwarFarmaish': options = shalwarFarmaishOptions; break;
-        }
-
-        if (options.length > 0) {
-            const opt = options.find(o => o.value === value);
-            if (opt) return isUrdu ? opt.labelUr : opt.labelEn;
-        }
-
-        return value;
-    };
 
     if (loading) {
         return (
@@ -236,7 +187,7 @@ export default function OrderDetail() {
         );
     }
 
-    const daysInfo = formatDaysRemaining(order.dueDate, isUrdu);
+    const daysInfo = formatDaysRemaining(order.dueDate, isUrdu, order.status);
     const isOverdue = daysInfo.color.includes('red');
 
     return (
@@ -258,9 +209,11 @@ export default function OrderDetail() {
                             <div>
                                 <h1 className="text-2xl font-bold text-white flex items-center gap-2">
                                     {t('orders.title')} #{order.id}
-                                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${isOverdue ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'}`}>
-                                        {daysInfo.text}
-                                    </span>
+                                    {daysInfo.text && (
+                                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${isOverdue ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'}`}>
+                                            {daysInfo.text}
+                                        </span>
+                                    )}
                                 </h1>
                                 <div className="flex items-center gap-4 mt-2 text-slate-300 text-sm">
                                     <span className="flex items-center gap-1">
@@ -472,14 +425,61 @@ export default function OrderDetail() {
                         <div className="p-6">
                             {customerMeasurement && Object.keys(customerMeasurement.fields).length > 0 ? (
                                 <div className="grid grid-cols-2 gap-3">
-                                    {Object.entries(customerMeasurement.fields).map(([key, value]) => (
-                                        value && (
-                                            <div key={key} className="bg-slate-50 rounded-lg p-3 text-center border border-slate-100 hover:border-emerald-200 transition-colors">
-                                                <p className="text-xs text-slate-500 mb-1">{getFieldLabel(key)}</p>
-                                                <p className="text-lg font-bold text-slate-800">{getFieldValue(key, value)}</p>
-                                            </div>
-                                        )
-                                    ))}
+                                    {(() => {
+                                        const orderedFields = [
+                                            { key: 'length', labelEn: 'Length', labelUr: 'لمبائی' },
+                                            { key: 'sleeve', labelEn: 'Sleeve', labelUr: 'آستین' },
+                                            { key: 'bazu_center', labelEn: 'Bazu Center', labelUr: 'بازو سینٹر' },
+                                            { key: 'chest', labelEn: 'Chest', labelUr: 'چھاتی' },
+                                            { key: 'tera', labelEn: 'Tera', labelUr: 'تیرا' },
+                                            { key: 'kalar', labelEn: 'Collar', labelUr: 'کالر' },
+                                            { key: 'daaman', labelEn: 'Daman Size', labelUr: 'دامن سائز' },
+                                            { key: 'golBazu', labelEn: 'Gol Bazu', labelUr: 'گول بازو' },
+                                            { key: 'collarNok', labelEn: 'Collar Nok', labelUr: 'کالر نوک', type: 'option', options: collarNokOptions },
+                                            { key: 'banPatti', labelEn: 'Ban Patti', labelUr: 'بین پٹی', type: 'option', options: banPattiOptions },
+                                            { key: 'pattiSize', labelEn: 'Patti Size', labelUr: 'پٹی سائز' },
+                                            { key: 'cuff', labelEn: 'Cuff', labelUr: 'کف', type: 'option', options: cuffOptions },
+                                            { key: 'cuffSize', labelEn: 'Cuff Size', labelUr: 'کف سائز' },
+                                            { key: 'frontPocket', labelEn: 'Front Pocket', labelUr: 'سامنے جیب', type: 'option', options: frontPocketOptions },
+                                            { key: 'sidePocket', labelEn: 'Side Pocket', labelUr: 'سائیڈ جیب', type: 'option', options: sidePocketOptions },
+                                            { key: 'frontStrip', labelEn: 'Front Strip', labelUr: 'سامنے کی پٹی', type: 'option', options: frontStripOptions },
+                                            { key: 'hemStyle', labelEn: 'Daman Style', labelUr: 'دامن فرمائش', type: 'option', options: hemStyleOptions },
+                                            { key: 'shalwar', labelEn: 'Shalwar', labelUr: 'شلوار' },
+                                            { key: 'aasan', labelEn: 'Aasan', labelUr: 'آسن' },
+                                            { key: 'pancha', labelEn: 'Pancha', labelUr: 'پانچہ' },
+                                            { key: 'shalwarFarmaish', labelEn: 'Shalwar Style', labelUr: 'شلوار فرمائش', type: 'option', options: shalwarFarmaishOptions },
+                                            { key: 'shalwarWidth', labelEn: 'Shalwar Width', labelUr: 'شلوار چوڑائی' },
+                                        ];
+
+                                        return orderedFields.map((field) => {
+                                            const value = customerMeasurement.fields[field.key];
+                                            if (!value) return null;
+
+                                            let displayValue = value;
+                                            if (field.type === 'option' && field.options) {
+                                                const opt = field.options.find(o => o.value === value);
+                                                if (opt) displayValue = isUrdu ? opt.labelUr : opt.labelEn;
+                                            } else {
+                                                displayValue = formatMeasurementDisplay(value);
+                                            }
+
+                                            return (
+                                                <div key={field.key} className="bg-slate-50 rounded-lg p-3 text-center border border-slate-100 hover:border-emerald-200 transition-colors">
+                                                    <p className="text-xs text-slate-500 mb-1 font-medium">
+                                                        {isUrdu ? field.labelUr : field.labelEn}
+                                                    </p>
+                                                    <p className={`text-lg font-bold text-slate-800 ${isUrdu && field.type !== 'option' ? 'font-sans' : ''}`} dir="ltr">
+                                                        {/* Force LTR for numbers, let text be natural */}
+                                                        {field.type === 'option' ? (
+                                                            <span dir={isUrdu ? 'rtl' : 'ltr'}>{displayValue}</span>
+                                                        ) : (
+                                                            <span>{displayValue}</span>
+                                                        )}
+                                                    </p>
+                                                </div>
+                                            );
+                                        });
+                                    })()}
                                 </div>
                             ) : (
                                 <div className="text-center py-12 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">

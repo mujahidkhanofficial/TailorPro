@@ -27,6 +27,7 @@ export default function CreateOrder() {
         dueDate: toInputDateFormat(addDays(new Date(), 3)),
         advancePayment: '',
         deliveryNotes: '',
+        suitsCount: 1,
         cutterId: 0,
         checkerId: 0,
         karigarId: 0,
@@ -97,6 +98,7 @@ export default function CreateOrder() {
                 status: 'new',
                 dueDate: new Date(formData.dueDate),
                 advancePayment: formData.advancePayment || undefined,
+                suitsCount: formData.suitsCount,
                 deliveryNotes: formData.deliveryNotes || undefined,
                 cutterId: formData.cutterId || undefined,
                 checkerId: formData.checkerId || undefined,
@@ -307,6 +309,20 @@ export default function CreateOrder() {
                                     placeholder={t('orders.paymentPlaceholder')}
                                 />
                             </div>
+                        </div>
+
+                        {/* Suits Quantity */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                {t('orders.suitsQuantity')}
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={formData.suitsCount}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, suitsCount: Number(e.target.value) }))}
+                                className="input h-11"
+                            />
                         </div>
 
                         {/* Delivery Notes */}

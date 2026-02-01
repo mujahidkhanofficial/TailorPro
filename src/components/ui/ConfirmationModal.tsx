@@ -16,6 +16,8 @@ interface ConfirmationModalProps {
     requirePassword?: boolean;
 }
 
+import { createPortal } from 'react-dom';
+
 export default function ConfirmationModal({
     isOpen,
     onClose,
@@ -81,7 +83,7 @@ export default function ConfirmationModal({
 
     if (!isOpen) return null;
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
                 <div className="p-6">
@@ -144,6 +146,7 @@ export default function ConfirmationModal({
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

@@ -10,6 +10,8 @@ interface OnboardingWizardProps {
     onOpenNewOrder: () => void;
 }
 
+import { createPortal } from 'react-dom';
+
 export default function OnboardingWizard({ onComplete, onOpenNewOrder }: OnboardingWizardProps) {
     const { t, i18n } = useTranslation();
     const { setLanguage, language, completeOnboarding } = useUIStore();
@@ -61,8 +63,8 @@ export default function OnboardingWizard({ onComplete, onOpenNewOrder }: Onboard
         onComplete();
     };
 
-    return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    return createPortal(
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
                 {/* Progress Bar */}
                 <div className="h-2 bg-gray-100 flex">
@@ -201,6 +203,7 @@ export default function OnboardingWizard({ onComplete, onOpenNewOrder }: Onboard
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

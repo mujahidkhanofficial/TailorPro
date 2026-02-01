@@ -289,7 +289,7 @@ export default function Orders() {
                             new Date(order.dueDate) < new Date() &&
                             !['completed', 'delivered'].includes(order.status);
 
-                        const daysInfo = formatDaysRemaining(order.dueDate, isUrdu);
+                        const daysInfo = formatDaysRemaining(order.dueDate, isUrdu, order.status);
 
                         // Dark theme status colors
                         const darkStatusColors: Record<string, string> = {
@@ -344,21 +344,22 @@ export default function Orders() {
                                         </span>
                                         <span className="text-slate-500">{t('orders.dueDate')}:</span>
                                         <span>{formatDate(order.dueDate)}</span>
-                                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${daysInfo.color.includes('red') ? 'bg-red-500/20 text-red-300' : daysInfo.color.includes('yellow') ? 'bg-yellow-500/20 text-yellow-300' : 'bg-green-500/20 text-green-300'}`}>
-                                            {daysInfo.text}
-                                        </span>
+                                        {daysInfo.text && (
+                                            <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${daysInfo.color.includes('red') ? 'bg-red-500/20 text-red-300' : daysInfo.color.includes('yellow') ? 'bg-yellow-500/20 text-yellow-300' : 'bg-green-500/20 text-green-300'}`}>
+                                                {daysInfo.text}
+                                            </span>
+                                        )}
                                     </div>
 
                                     {/* Advance Payment */}
-                                    {order.advancePayment && (
-                                        <div className="flex items-center text-slate-300 gap-3">
-                                            <span className="p-1.5 bg-slate-700 rounded-full">
-                                                <Wallet className="w-3 h-3" />
-                                            </span>
-                                            <span className="text-slate-500">{t('orders.advancePayment')}:</span>
-                                            <span className="text-emerald-400 font-semibold">{order.advancePayment}</span>
-                                        </div>
-                                    )}
+                                    {/* Advance Payment */}
+                                    <div className="flex items-center text-slate-300 gap-3">
+                                        <span className="p-1.5 bg-slate-700 rounded-full">
+                                            <Wallet className="w-3 h-3" />
+                                        </span>
+                                        <span className="text-slate-500">{t('orders.advancePayment')}:</span>
+                                        <span className="text-emerald-400 font-semibold">{order.advancePayment || 0}</span>
+                                    </div>
                                 </div>
 
                                 <div className="flex justify-between items-center pt-3 border-t border-slate-700">
@@ -370,7 +371,7 @@ export default function Orders() {
                                         <button
                                             onClick={(e) => handleQuickPrint(e, order)}
                                             className="text-slate-500 hover:text-cyan-600 p-1 rounded-md hover:bg-slate-700 transition-colors"
-                                            title={t('common.print')}
+                                            title={isUrdu ? 'سلپ پرنٹ کریں' : 'Print Slip'}
                                         >
                                             <Printer className="w-4 h-4" />
                                         </button>

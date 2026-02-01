@@ -10,6 +10,8 @@ interface WorkerFormModalProps {
     onSuccess?: (workerId: number) => void;
 }
 
+import { createPortal } from 'react-dom';
+
 export default function WorkerFormModal({ worker, onClose, onSuccess }: WorkerFormModalProps) {
     const { t } = useTranslation();
     const { addWorker, updateWorker, workers } = useWorkerStore();
@@ -90,8 +92,8 @@ export default function WorkerFormModal({ worker, onClose, onSuccess }: WorkerFo
 
     const roles: WorkerRole[] = ['cutter', 'checker', 'karigar'];
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    return createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
@@ -200,6 +202,7 @@ export default function WorkerFormModal({ worker, onClose, onSuccess }: WorkerFo
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

@@ -227,7 +227,7 @@ export default function CustomerDetail() {
                         <div className="space-y-3">
                             {orders.map((order) => {
                                 const statusOption = orderStatusOptions.find((s) => s.value === order.status);
-                                const daysInfo = formatDaysRemaining(order.dueDate, isUrdu);
+                                const daysInfo = formatDaysRemaining(order.dueDate, isUrdu, order.status);
                                 return (
                                     <Link
                                         key={order.id}
@@ -250,9 +250,11 @@ export default function CustomerDetail() {
                                                 <p className="text-xs text-gray-500 mb-1">
                                                     {formatDate(order.dueDate)}
                                                 </p>
-                                                <span className={`text-xs font-medium px-2 py-1 rounded-full ${daysInfo.color}`}>
-                                                    {daysInfo.text}
-                                                </span>
+                                                {daysInfo.text && (
+                                                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${daysInfo.color}`}>
+                                                        {daysInfo.text}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </Link>

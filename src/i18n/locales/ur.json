@@ -10,7 +10,8 @@
         "workers": "کاریگران",
         "backup": "بیک اپ",
         "settings": "ترتیبات",
-        "logout": "لاگ آؤٹ"
+        "logout": "لاگ آؤٹ",
+        "karigarProgress": "کاریگر پروگریس"
     },
     "dashboard": {
         "title": "ڈیش بورڈ",
@@ -58,7 +59,8 @@
         "statusDelivered": "پہنچا دیا گیا",
         "statusCompleted": "مکمل",
         "notesPlaceholder": "کوئی خاص ہدایات...",
-        "paymentPlaceholder": "روپے"
+        "paymentPlaceholder": "روپے",
+        "suitsQuantity": "سوٹ کی تعداد"
     },
     "workers": {
         "title": "کاریگران",
@@ -124,7 +126,29 @@
         "title": "ترتیبات",
         "language": "زبان",
         "about": "ہمارے بارے میں",
-        "version": "ورژن"
+        "version": "ورژن",
+        "shopDetails": "دکان کی تفصیلات (پرنٹ ہیڈر)",
+        "saveChanges": "تبدیلیاں محفوظ کریں",
+        "shopName": "دکان کا نام (اردو/انگریزی)",
+        "address": "پتہ (اردو/انگریزی)",
+        "phone1": "فون 1",
+        "phone2": "فون 2 (اختیاری)",
+        "printerSettings": "پرنٹر کی ترتیبات",
+        "defaultPrinter": "ڈیفالٹ پرنٹر",
+        "selectPrinter": "پرنٹر منتخب کریں...",
+        "printerHint": "رسیدیں خود بخود اس پرنٹر پر پرنٹ ہوں گی۔",
+        "securitySettings": "سیکیورٹی سیٹنگز",
+        "changePassword": "پاس ورڈ تبدیل کریں",
+        "currentPassword": "موجودہ پاس ورڈ",
+        "newPassword": "نیا پاس ورڈ",
+        "confirmPassword": "نئے پاس ورڈ کی تصدیق",
+        "fillAll": "تمام خانے پر کریں",
+        "passwordMismatch": "نئے پاس ورڈ میچ نہیں کر رہے",
+        "incorrectPassword": "موجودہ پاس ورڈ غلط ہے",
+        "passwordChanged": "پاس ورڈ تبدیل کر دیا گیا",
+        "saved": "ترتیبات محفوظ ہو گئیں",
+        "saveError": "ترتیبات محفوظ کرنے میں ناکامی",
+        "changeError": "پاس ورڈ تبدیل کرنے میں ناکامی"
     },
     "common": {
         "save": "محفوظ کریں",

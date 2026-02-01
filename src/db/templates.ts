@@ -8,7 +8,7 @@ export const measurementFields = [
     { key: 'chest', labelEn: 'Chaati', labelUr: 'چھاتی' },
     { key: 'tera', labelEn: 'Tera', labelUr: 'تیرا' },
     { key: 'kalar', labelEn: 'Collar', labelUr: 'کالر' },
-    { key: 'daaman', labelEn: 'Daman', labelUr: 'دامن' },
+    { key: 'daaman', labelEn: 'Daman Size', labelUr: 'دامن سائز' },
     { key: 'shalwar', labelEn: 'Shalwar', labelUr: 'شلوار' },
     { key: 'aasan', labelEn: 'Aasan', labelUr: 'آسن' },
     { key: 'pancha', labelEn: 'Pancha', labelUr: 'پانچہ' },
@@ -85,6 +85,7 @@ export const shalwarFarmaishOptions = [
     { value: 'full_bar', labelEn: 'Full Bar', labelUr: 'فل بار' },
     { value: 'normal', labelEn: 'Normal', labelUr: 'نارمل' },
     { value: 'trouser', labelEn: 'Trouser', labelUr: 'ٹراؤزر' },
+    { value: '6_darz', labelEn: '6 Darz Shalwar', labelUr: '6 درز شلوار' },
 ];
 
 // Design options (checkboxes from reference slip)
@@ -102,6 +103,7 @@ export const designOptions = [
     { key: 'hingerTera', labelEn: 'Hinger Tera', labelUr: 'ہینگر تیرا' },
     { key: 'sadaButton', labelEn: 'Sada Button', labelUr: 'سادہ بٹن' },
     { key: 'fancyButton', labelEn: 'Fancy Button', labelUr: 'فینسی بٹن' },
+    { key: 'stadKaajButton', labelEn: 'Stad Kaaj Button', labelUr: 'سٹڈ کاج بٹن' },
 ];
 
 // GarmentType templates removed - measurements are now at customer level only

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { db, CustomerMeasurement } from '@/db/database';
 import { measurementFields, designOptions, collarNokOptions, banPattiOptions, cuffOptions, frontPocketOptions, sidePocketOptions, frontStripOptions, hemStyleOptions, shalwarFarmaishOptions } from '@/db/templates';
@@ -6,13 +6,44 @@ import { Save, Printer, RotateCcw, CheckCircle, AlertCircle, Eye } from 'lucide-
 import { useAutosave } from '@/hooks/useAutosave';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import toast from 'react-hot-toast';
+import { parseMeasurementInput, formatMeasurementDisplay } from '@/utils/fractionUtils';
 
 interface CustomerMeasurementFormProps {
     customerId: number;
-    customerName?: string; // Optional, for future use
+    customerName?: string;
     onPrint?: (measurement: CustomerMeasurement) => void;
     onPreview?: (measurement: CustomerMeasurement) => void;
 }
+
+// Optimized Input Component to prevent re-renders
+const MeasurementInput = memo(({
+    label,
+    value,
+    fieldKey,
+
+    onChange
+}: {
+    label: string,
+    value: string,
+    fieldKey: string,
+    onChange: (key: string, value: string) => void
+}) => (
+    <div>
+        <label className="block text-sm font-medium text-gray-600 mb-1">
+            {label}
+        </label>
+        <input
+            type="text"
+            value={formatMeasurementDisplay(value || '')}
+            onChange={(e) => onChange(fieldKey, e.target.value)}
+            className="input text-center text-lg font-semibold w-full h-14 py-1"
+            placeholder="—"
+            dir="ltr"
+        />
+    </div>
+));
+
+MeasurementInput.displayName = 'MeasurementInput';
 
 export default function CustomerMeasurementForm({
     customerId,
@@ -27,6 +58,15 @@ export default function CustomerMeasurementForm({
     const [existingId, setExistingId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+    // Memoize filtered fields
+    const kameesFields = useMemo(() => measurementFields.filter(f => ['length', 'sleeve', 'bazu_center', 'chest', 'tera', 'kalar', 'daaman'].includes(f.key)), []);
+    const shalwarFields = useMemo(() => measurementFields.filter(f => ['shalwar', 'aasan', 'pancha'].includes(f.key)), []);
+
+    // Stable change handler
+    const handleFieldChange = useCallback((key: string, value: string) => {
+        setFields((prev) => ({ ...prev, [key]: parseMeasurementInput(value) }));
+    }, []);
 
     // Load existing measurements on mount
     useEffect(() => {
@@ -198,193 +238,226 @@ export default function CustomerMeasurementForm({
                 </div>
             </div>
 
-            {/* Measurement Fields & Dropdowns in Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {measurementFields.map((field) => (
-                    <div key={field.key}>
-                        <label className="block text-sm font-medium text-gray-600 mb-1">
-                            {isUrdu ? field.labelUr : field.labelEn}
-                        </label>
-                        <input
-                            type="text"
-                            value={fields[field.key] || ''}
-                            onChange={(e) =>
-                                setFields((prev) => ({ ...prev, [field.key]: e.target.value }))
-                            }
-                            className="input text-center text-lg font-semibold"
-                            placeholder="—"
-                            dir="ltr"
+            {/* Kamees Section */}
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+                <h4 className="text-md font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-primary-500 rounded-full"></span>
+                    {isUrdu ? 'قمیض / سوٹ' : 'Kamees / Shirt'}
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {kameesFields.map((field) => (
+                        <MeasurementInput
+                            key={field.key}
+                            label={isUrdu ? field.labelUr : field.labelEn}
+                            value={fields[field.key]}
+                            fieldKey={field.key}
+                            onChange={handleFieldChange}
                         />
+                    ))}
+
+                    <MeasurementInput
+                        label={isUrdu ? 'گول بازو' : 'Gol Bazu'}
+                        value={fields['golBazu']}
+                        fieldKey="golBazu"
+                        onChange={handleFieldChange}
+                    />
+
+                    {/* Collar Nok Dropdown */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                            {isUrdu ? 'کالر نوک' : 'Collar Nok'}
+                        </label>
+                        <select
+                            value={fields['collarNok'] || ''}
+                            onChange={(e) => setFields((prev) => ({ ...prev, collarNok: e.target.value }))}
+                            className="input w-full text-center text-lg font-semibold h-14 py-1"
+                            dir={isUrdu ? 'rtl' : 'ltr'}
+                        >
+                            {collarNokOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {isUrdu ? opt.labelUr : opt.labelEn}
+                                </option>
+                            ))}
+                        </select>
                     </div>
-                ))}
 
-                {/* Collar Nok Dropdown */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'کالر نوک' : 'Collar Nok'}
-                    </label>
-                    <select
-                        value={fields['collarNok'] || ''}
-                        onChange={(e) => setFields((prev) => ({ ...prev, collarNok: e.target.value }))}
-                        className="input w-full"
-                        dir={isUrdu ? 'rtl' : 'ltr'}
-                    >
-                        {collarNokOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                                {isUrdu ? opt.labelUr : opt.labelEn}
-                            </option>
-                        ))}
-                    </select>
+                    {/* Ban Patti Dropdown */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                            {isUrdu ? 'بین پٹی' : 'Ban Patti'}
+                        </label>
+                        <select
+                            value={fields['banPatti'] || ''}
+                            onChange={(e) => setFields((prev) => ({ ...prev, banPatti: e.target.value }))}
+                            className="input w-full text-center text-lg font-semibold h-14 py-1"
+                            dir={isUrdu ? 'rtl' : 'ltr'}
+                        >
+                            {banPattiOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {isUrdu ? opt.labelUr : opt.labelEn}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <MeasurementInput
+                        label={isUrdu ? 'پٹی سائز' : 'Patti Size'}
+                        value={fields['pattiSize']}
+                        fieldKey="pattiSize"
+                        onChange={handleFieldChange}
+                    />
+
+                    {/* Cuff Dropdown */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                            {isUrdu ? 'کف' : 'Cuff'}
+                        </label>
+                        <select
+                            value={fields['cuff'] || ''}
+                            onChange={(e) => setFields((prev) => ({ ...prev, cuff: e.target.value }))}
+                            className="input w-full text-center text-lg font-semibold h-14 py-1"
+                            dir={isUrdu ? 'rtl' : 'ltr'}
+                        >
+                            {cuffOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {isUrdu ? opt.labelUr : opt.labelEn}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <MeasurementInput
+                        label={isUrdu ? 'کف سائز' : 'Cuff Size'}
+                        value={fields['cuffSize']}
+                        fieldKey="cuffSize"
+                        onChange={handleFieldChange}
+                    />
+
+                    {/* Front Pocket Dropdown */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                            {isUrdu ? 'سامنے جیب' : 'Front Pocket'}
+                        </label>
+                        <select
+                            value={fields['frontPocket'] || ''}
+                            onChange={(e) => setFields((prev) => ({ ...prev, frontPocket: e.target.value }))}
+                            className="input w-full text-center text-lg font-semibold h-14 py-1"
+                            dir={isUrdu ? 'rtl' : 'ltr'}
+                        >
+                            {frontPocketOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {isUrdu ? opt.labelUr : opt.labelEn}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Side Pocket Dropdown */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                            {isUrdu ? 'سائیڈ جیب' : 'Side Pocket'}
+                        </label>
+                        <select
+                            value={fields['sidePocket'] || ''}
+                            onChange={(e) => setFields((prev) => ({ ...prev, sidePocket: e.target.value }))}
+                            className="input w-full text-center text-lg font-semibold h-14 py-1"
+                            dir={isUrdu ? 'rtl' : 'ltr'}
+                        >
+                            {sidePocketOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {isUrdu ? opt.labelUr : opt.labelEn}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Front Strip Dropdown */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                            {isUrdu ? 'سامنے کی پٹی' : 'Front Strip'}
+                        </label>
+                        <select
+                            value={fields['frontStrip'] || ''}
+                            onChange={(e) => setFields((prev) => ({ ...prev, frontStrip: e.target.value }))}
+                            className="input w-full text-center text-lg font-semibold h-14 py-1"
+                            dir={isUrdu ? 'rtl' : 'ltr'}
+                        >
+                            {frontStripOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {isUrdu ? opt.labelUr : opt.labelEn}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+
+                    {/* Hem Style Dropdown */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                            {isUrdu ? 'دامن فرمائش' : 'Daman Farmaish'}
+                        </label>
+
+                        <select
+                            value={fields['hemStyle'] || ''}
+                            onChange={(e) => setFields((prev) => ({ ...prev, hemStyle: e.target.value }))}
+                            className="input w-full text-center text-lg font-semibold h-14 py-1"
+                            dir={isUrdu ? 'rtl' : 'ltr'}
+                        >
+                            {hemStyleOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {isUrdu ? opt.labelUr : opt.labelEn}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
+            </div>
 
-                {/* Ban Patti Dropdown */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'بین پٹی' : 'Ban Patti'}
-                    </label>
-                    <select
-                        value={fields['banPatti'] || ''}
-                        onChange={(e) => setFields((prev) => ({ ...prev, banPatti: e.target.value }))}
-                        className="input w-full"
-                        dir={isUrdu ? 'rtl' : 'ltr'}
-                    >
-                        {banPattiOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                                {isUrdu ? opt.labelUr : opt.labelEn}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+            {/* Shalwar Section */}
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+                <h4 className="text-md font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-secondary-500 rounded-full"></span>
+                    {isUrdu ? 'شلوار / پاجامہ' : 'Shalwar / Trouser'}
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {shalwarFields.map((field) => (
+                        <MeasurementInput
+                            key={field.key}
+                            label={isUrdu ? field.labelUr : field.labelEn}
+                            value={fields[field.key]}
+                            fieldKey={field.key}
+                            onChange={handleFieldChange}
+                        />
+                    ))}
 
-                {/* Cuff Dropdown */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'کف' : 'Cuff'}
-                    </label>
-                    <select
-                        value={fields['cuff'] || ''}
-                        onChange={(e) => setFields((prev) => ({ ...prev, cuff: e.target.value }))}
-                        className="input w-full"
-                        dir={isUrdu ? 'rtl' : 'ltr'}
-                    >
-                        {cuffOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                                {isUrdu ? opt.labelUr : opt.labelEn}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                    {/* Shalwar Farmaish Dropdown */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                            {isUrdu ? 'شلوار فرمائش' : 'Shalwar Farmaish'}
+                        </label>
+                        <select
+                            value={fields['shalwarFarmaish'] || ''}
+                            onChange={(e) => setFields((prev) => ({ ...prev, shalwarFarmaish: e.target.value }))}
+                            className="input w-full text-center text-lg font-semibold h-14 py-1"
+                            dir={isUrdu ? 'rtl' : 'ltr'}
+                        >
+                            {shalwarFarmaishOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {isUrdu ? opt.labelUr : opt.labelEn}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-                {/* Front Pocket Dropdown */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'سامنے جیب' : 'Front Pocket'}
-                    </label>
-                    <select
-                        value={fields['frontPocket'] || ''}
-                        onChange={(e) => setFields((prev) => ({ ...prev, frontPocket: e.target.value }))}
-                        className="input w-full"
-                        dir={isUrdu ? 'rtl' : 'ltr'}
-                    >
-                        {frontPocketOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                                {isUrdu ? opt.labelUr : opt.labelEn}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Side Pocket Dropdown */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'سائیڈ جیب' : 'Side Pocket'}
-                    </label>
-                    <select
-                        value={fields['sidePocket'] || ''}
-                        onChange={(e) => setFields((prev) => ({ ...prev, sidePocket: e.target.value }))}
-                        className="input w-full"
-                        dir={isUrdu ? 'rtl' : 'ltr'}
-                    >
-                        {sidePocketOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                                {isUrdu ? opt.labelUr : opt.labelEn}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Front Strip Dropdown */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'سامنے کی پٹی' : 'Front Strip'}
-                    </label>
-                    <select
-                        value={fields['frontStrip'] || ''}
-                        onChange={(e) => setFields((prev) => ({ ...prev, frontStrip: e.target.value }))}
-                        className="input w-full"
-                        dir={isUrdu ? 'rtl' : 'ltr'}
-                    >
-                        {frontStripOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                                {isUrdu ? opt.labelUr : opt.labelEn}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Hem Style Dropdown */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'دامن' : 'Daman'}
-                    </label>
-                    <select
-                        value={fields['hemStyle'] || ''}
-                        onChange={(e) => setFields((prev) => ({ ...prev, hemStyle: e.target.value }))}
-                        className="input w-full"
-                        dir={isUrdu ? 'rtl' : 'ltr'}
-                    >
-                        {hemStyleOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                                {isUrdu ? opt.labelUr : opt.labelEn}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Shalwar Farmaish Dropdown */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'شلوار فرمائش' : 'Shalwar Farmaish'}
-                    </label>
-                    <select
-                        value={fields['shalwarFarmaish'] || ''}
-                        onChange={(e) => setFields((prev) => ({ ...prev, shalwarFarmaish: e.target.value }))}
-                        className="input w-full"
-                        dir={isUrdu ? 'rtl' : 'ltr'}
-                    >
-                        {shalwarFarmaishOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                                {isUrdu ? opt.labelUr : opt.labelEn}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Shalwar Width Input - Keeping as it might be 'Ghera' separate from Shalwar Length */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {isUrdu ? 'شلوار چوڑائی' : 'Shalwar Width'}
-                    </label>
-                    <input
-                        type="text"
-                        value={fields['shalwarWidth'] || ''}
-                        onChange={(e) => setFields((prev) => ({ ...prev, shalwarWidth: e.target.value }))}
-                        className="input text-center text-lg font-semibold w-full"
-                        placeholder="—"
-                        dir="ltr"
+                    <MeasurementInput
+                        label={isUrdu ? 'شلوار چوڑائی' : 'Shalwar Width'}
+                        value={fields['shalwarWidth']}
+                        fieldKey="shalwarWidth"
+                        onChange={handleFieldChange}
                     />
                 </div>
             </div>
+
             {/* Design Options (Checkboxes) */}
             <div>
                 <h4 className="text-sm font-medium text-gray-600 mb-3">
